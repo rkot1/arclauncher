@@ -1925,6 +1925,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show at bottom edge'**
   String get navigationBarBottomEdge;
+
+  /// No description provided for @backupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & restore'**
+  String get backupSettings;
+
+  /// No description provided for @backupExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export settings & layout'**
+  String get backupExport;
+
+  /// No description provided for @backupExportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves a JSON file in the backups folder'**
+  String get backupExportHint;
+
+  /// No description provided for @backupSaveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy to…'**
+  String get backupSaveCopy;
+
+  /// No description provided for @backupSaveCopyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a place such as a USB drive'**
+  String get backupSaveCopyHint;
+
+  /// No description provided for @backupRestoreFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from file…'**
+  String get backupRestoreFromFile;
+
+  /// No description provided for @backupSavedBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved backups'**
+  String get backupSavedBackups;
+
+  /// No description provided for @backupNoBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'No backups yet'**
+  String get backupNoBackups;
+
+  /// No description provided for @backupBeforeRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved before the last restore'**
+  String get backupBeforeRestore;
+
+  /// No description provided for @backupSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String backupSavedTo(String path);
+
+  /// No description provided for @backupCopySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy saved'**
+  String get backupCopySaved;
+
+  /// No description provided for @backupSaveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No app on this device can save files. Copy backups from the folder below with adb instead.'**
+  String get backupSaveUnavailable;
+
+  /// No description provided for @backupOpenUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No app on this device can open files. Copy the file into the folder below instead.'**
+  String get backupOpenUnavailable;
+
+  /// No description provided for @backupRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup?'**
+  String get backupRestoreTitle;
+
+  /// No description provided for @backupRestoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your settings and layout will be replaced. The current ones are saved first as {undoFile}, so you can go back.'**
+  String backupRestoreBody(String undoFile);
+
+  /// No description provided for @backupRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupRestore;
+
+  /// No description provided for @backupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored'**
+  String get backupRestored;
+
+  /// No description provided for @backupRestoredSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Backup restored. 1 app isn\'t installed here and was skipped.} other{Backup restored. {count} apps aren\'t installed here and were skipped.}}'**
+  String backupRestoredSkipped(int count);
+
+  /// No description provided for @backupRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore: {error}'**
+  String backupRestoreFailed(String error);
+
+  /// No description provided for @backupExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {error}'**
+  String backupExportFailed(String error);
+
+  /// No description provided for @backupFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups folder: {path}'**
+  String backupFolderHint(String path);
+
+  /// No description provided for @backupAdbHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tune settings from a computer: adb shell am broadcast -a {package}.COMMAND --es cmd help'**
+  String backupAdbHint(String package);
 }
 
 class _AppLocalizationsDelegate

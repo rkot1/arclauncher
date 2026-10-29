@@ -52,6 +52,8 @@ Once you're in the group, you can enrol in the beta either way:
 - **In-App Updater** - Check for new releases and read changelogs directly inside the app.
 - **Sideloaded App Support** - Displays and launches non-TV Android apps without extra workarounds.
 - **Brightness Scheduler (Experimental)** - Automatically adjust brightness based on time (requires ADB `WRITE_SETTINGS` permission).
+- **Backup & Restore** - Save your settings and home screen layout to one JSON file, and restore them on this or another device.
+- **Tuning over ADB** - Read and change any setting from a computer while the launcher is on screen. See [Backup, restore and tuning over ADB](#backup-restore-and-tuning-over-adb).
 
 > [!NOTE]
 > Because Android's `WallpaperManager` is not available on some Android TV devices, Arc Launcher manages its own wallpapers. Changing the wallpaper requires a file explorer installed on the device.
@@ -190,6 +192,53 @@ $ adb shell pm enable com.google.android.tungsten.setupwraith
 #### Known issues
 
 On Chromecast with Google TV (maybe others), the "YouTube" remote button will stop working if the default launcher is disabled. As a workaround, you can use [Button Mapper](https://play.google.com/store/apps/details?id=flar2.homebutton) to remap it correctly.
+
+## Backup, restore and tuning over ADB
+
+**Settings → System → Backup & restore** saves one JSON file with your settings and the home screen layout: the sections in order, the apps in each, and which apps are hidden. Backups are saved in `Android/data/com.omeda.arc/files/backups/`. *Save a copy to…* puts one somewhere else, such as a USB drive, on devices that have a file picker.
+
+Restoring replaces your settings and layout. The current ones are saved first as `arc-launcher-before-restore.json`, so restoring that file takes you back. Apps that are not installed are skipped, and installed apps the backup does not list are added to *All Apps*. Backups leave out wallpapers and other images, custom fonts (copy the `fonts` folder yourself) and your Unsplash and Reddit API keys.
+
+While the launcher is running, its settings can also be read and changed from a computer, and the screen updates right away:
+
+```bash
+adb shell am broadcast -a com.omeda.arc.COMMAND -p com.omeda.arc --es cmd help
+```
+
+```bash
+adb shell am broadcast -a com.omeda.arc.COMMAND -p com.omeda.arc --es cmd set --es key app_caption_font_size --es value 16
+```
+
+```bash
+adb shell "am broadcast -a com.omeda.arc.COMMAND -p com.omeda.arc --es cmd set --es json '{\"app_caption_background\": \"pill\", \"app_icon_variant\": \"monochrome\"}'"
+```
+
+The answer is printed as `Broadcast completed: result=0, data="…"`. `result=1` means the command failed, and `data` says why. Values with spaces or quotes have to be quoted once more for the device's shell, as in the last example. Only adb can send these commands: the launcher accepts them only from senders holding Android's `DUMP` permission, which other apps cannot get. Debug builds use `com.omeda.arc.debug` instead of `com.omeda.arc`.
+
+| Command | Arguments | Does |
+|---|---|---|
+| `help` | | Lists the commands, and every setting with the values it accepts |
+| `list` | | Prints every setting as JSON, `null` meaning the default |
+| `get` | `--es key <key>` | Prints one setting |
+| `set` | `--es key <key> --es value <value>`, or `--es json '<object>'` | Changes settings |
+| `reset` | `--es key <key>` | Puts a setting back to its default |
+| `export` | `[--es path <file>]` | Saves a backup, by default in the backups folder, and prints its path |
+| `import` | `--es path <file>`, or `--es json '<backup>'` | Restores a backup |
+| `dump` | | Prints a backup |
+
+[`tool/arc-adb`](tool/arc-adb) runs these commands for you and handles the quoting. Its `pull` saves a backup and copies it to your computer, and `push` copies one to the device and restores it:
+
+```bash
+tool/arc-adb set app_caption_font_size 16
+```
+
+```bash
+tool/arc-adb pull my-layout.json
+```
+
+```bash
+tool/arc-adb push my-layout.json
+```
 
 ## Contributing
 

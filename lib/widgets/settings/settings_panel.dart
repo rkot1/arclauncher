@@ -34,6 +34,7 @@ import 'package:flauncher/widgets/settings/app_details_page.dart';
 import 'package:flauncher/widgets/settings/accent_color_page.dart';
 import 'package:flauncher/widgets/settings/app_captions_page.dart';
 import 'package:flauncher/widgets/settings/app_icons_page.dart';
+import 'package:flauncher/widgets/settings/backup_page.dart';
 import 'package:flauncher/widgets/settings/brightness_settings_page.dart';
 import 'package:flauncher/widgets/settings/appearance_panel_page.dart';
 import 'package:flauncher/widgets/settings/focus_border_thickness_page.dart';
@@ -133,6 +134,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
                       return _FastPageRoute(builder: (_) => const AppIconsPage());
                     case AppCaptionsPage.routeName:
                       return _FastPageRoute(builder: (_) => const AppCaptionsPage());
+                    case BackupPage.routeName:
+                      return _FastPageRoute(builder: (_) => const BackupPage());
                     case MiscPanelPage.routeName:
                       return _FastPageRoute(builder: (_) => MiscPanelPage());
                     case WatchNextPanelPage.routeName:
