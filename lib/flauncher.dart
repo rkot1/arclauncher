@@ -66,16 +66,22 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
   final GlobalKey _dockKey = GlobalKey();
   late final _HeroBackdropBaker _heroBackdropBaker = _HeroBackdropBaker();
 
+  /// How far the sections below the dock are scrolled into view, from 0 (dock at the bottom) to 1
+  /// (dock at the top); null without a dock, when the sections start at the top of the screen.
+  final ValueNotifier<double?> _gridReveal = ValueNotifier(null);
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _scrollController.addListener(_updateGridReveal);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
+    _gridReveal.dispose();
     _heroBackdropBaker.dispose();
     super.dispose();
   }
@@ -198,22 +204,26 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
             builder: (_, data, __) {
               final (appGridFocused, blurDisabled, hasVideoWallpaper) = data;
               return ListenableBuilder(
-                listenable: _heroBackdropBaker,
+                listenable: Listenable.merge([_heroBackdropBaker, _gridReveal]),
                 builder: (context, _) {
                   final gridBlur = _heroBackdropBaker.textures?.gridBlur;
                   if (hasVideoWallpaper && gridBlur == null) {
                     return const SizedBox.shrink();
                   }
+                  // Below a dock the blur follows the scroll position rather than focus, which stays in
+                  // the grid after a touch scroll back to the dock.
+                  final reveal = _gridReveal.value;
+                  final blur = blurDisabled ? 0.0 : reveal ?? (appGridFocused ? 1.0 : 0.0);
                   return Positioned.fill(
                     child: IgnorePointer(
                       child: AnimatedOpacity(
-                        opacity: appGridFocused && !blurDisabled ? 1 : 0,
-                        duration: const Duration(milliseconds: 250),
+                        opacity: blur,
+                        duration: reveal == null ? const Duration(milliseconds: 250) : Duration.zero,
                         curve: Curves.easeInOut,
                         child: CachedBlurLayer(
                           sigma: 10,
                           prebakedBlur: gridBlur,
-                          hidden: !appGridFocused || blurDisabled,
+                          hidden: blur == 0,
                         ),
                       ),
                     ),
@@ -280,6 +290,13 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
     final reserveWatchNextSpace = showWatchNextSection && watchNextVisible;
 
     if (favoriteApps.isEmpty && otherSections.isEmpty) return _emptyState(context);
+
+    // The dock may have appeared, moved or gone without a scroll.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateGridReveal();
+      }
+    });
 
     final watchNextSpace = watchNextBigPicture ? 385 : 410;
 
@@ -487,6 +504,11 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  void _updateGridReveal() {
+    final dockTop = _dockTopScrollOffset();
+    _gridReveal.value = dockTop == null || dockTop <= 0 ? null : (_scrollController.offset / dockTop).clamp(0.0, 1.0);
   }
 
   double? _dockTopScrollOffset() {
