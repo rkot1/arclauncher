@@ -42,6 +42,26 @@ class FLauncherChannel {
     return bytes;
   }
 
+  Future<Map<dynamic, dynamic>?> getApplicationIconVariant(String packageName, String variant) =>
+      _methodChannel.invokeMapMethod("getApplicationIconVariant", {"packageName": packageName, "variant": variant});
+
+  Future<String?> pickFontFile(String directory) =>
+      _methodChannel.invokeMethod<String>("pickFontFile", {"directory": directory});
+
+  /// The text of a file the user picks, or null when cancelled.
+  /// Throws a [PlatformException] coded "unavailable" when nothing on the device can pick files.
+  Future<String?> openBackupFile() => _methodChannel.invokeMethod<String>("openBackupFile");
+
+  /// Whether [content] was saved where the user picked.
+  /// Throws a [PlatformException] coded "unavailable" when nothing on the device can save files.
+  Future<bool> saveBackupFile(String name, String content) async =>
+      await _methodChannel.invokeMethod<bool>("saveBackupFile", {"name": name, "content": content}) ?? false;
+
+  Future<void> setNavigationBarMode(String mode) => _methodChannel.invokeMethod("setNavigationBarMode", mode);
+
+  Future<void> setNavigationBarRevealed(bool revealed) =>
+      _methodChannel.invokeMethod("setNavigationBarRevealed", revealed);
+
   Future<bool> applicationExists(String packageName) async =>
       await _methodChannel.invokeMethod('applicationExists', packageName);
 

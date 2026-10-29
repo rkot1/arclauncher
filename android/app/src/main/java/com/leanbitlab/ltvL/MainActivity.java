@@ -18,27 +18,39 @@
 
 package com.omeda.arc;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.*;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Pair;
+import android.view.View;
 import android.media.tv.TvContract;
 import android.database.Cursor;
 import android.Manifest;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.annotation.RequiresApi;
 
@@ -48,6 +60,10 @@ import java.util.List;
 import java.util.Map;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
 import android.app.AppOpsManager;
@@ -58,9 +74,11 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.platform.PlatformPlugin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,9 +94,30 @@ public class MainActivity extends FlutterActivity {
     private final String METHOD_CHANNEL = "me.efesser.flauncher/method";
     private final String APPS_EVENT_CHANNEL = "me.efesser.flauncher/event_apps";
     private final String NETWORK_EVENT_CHANNEL = "me.efesser.flauncher/event_network";
+    private final String COMMANDS_CHANNEL = "me.efesser.flauncher/commands";
     private static final String PERMISSION_READ_TV_LISTINGS = "android.permission.READ_TV_LISTINGS";
     private static final int REQUEST_CODE_READ_TV_LISTINGS = 1001;
     private static final String COLUMN_ASPECT_RATIO = "aspect_ratio";
+    private static final int REQUEST_CODE_PICK_FONT = 1002;
+    private static final int REQUEST_CODE_OPEN_BACKUP = 1003;
+    private static final int REQUEST_CODE_SAVE_BACKUP = 1004;
+    private static final int MAX_BACKUP_SIZE = 8 * 1024 * 1024;
+    // App card icons are drawn up to ~200 physical pixels tall on 1080p TVs.
+    private static final int ICON_VARIANT_RENDER_SIZE = 256;
+
+    private final ExecutorService iconExecutor = Executors.newSingleThreadExecutor();
+    private MethodChannel.Result pendingFontPickResult;
+    private String pendingFontPickDirectory;
+    private MethodChannel.Result pendingOpenBackupResult;
+    private MethodChannel.Result pendingSaveBackupResult;
+    private String pendingSaveBackupContent;
+
+    private MethodChannel commandsChannel;
+    private BroadcastReceiver commandReceiver;
+
+    // "visible", "hidden" or "bottomEdge" (hidden, revealed while the pointer rests on the bottom edge).
+    private String navigationBarMode = "visible";
+    private boolean navigationBarRevealed = false;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -91,6 +130,28 @@ public class MainActivity extends FlutterActivity {
                 case "getApplications" -> result.success(getApplications());
                 case "getApplicationBanner" -> result.success(getApplicationBanner(call.arguments()));
                 case "getApplicationIcon" -> result.success(getApplicationIcon(call.arguments()));
+                case "getApplicationIconVariant" -> {
+                    String packageName = call.argument("packageName");
+                    String variant = call.argument("variant");
+                    iconExecutor.execute(() -> {
+                        Map<String, Object> icon = getApplicationIconVariant(packageName, variant);
+                        runOnUiThread(() -> result.success(icon));
+                    });
+                }
+                case "pickFontFile" -> pickFontFile(call.argument("directory"), result);
+                case "openBackupFile" -> openBackupFile(result);
+                case "saveBackupFile" -> saveBackupFile(call.argument("name"), call.argument("content"), result);
+                case "setNavigationBarMode" -> {
+                    navigationBarMode = call.arguments();
+                    navigationBarRevealed = false;
+                    applyNavigationBarState();
+                    result.success(null);
+                }
+                case "setNavigationBarRevealed" -> {
+                    navigationBarRevealed = Boolean.TRUE.equals(call.arguments());
+                    applyNavigationBarState();
+                    result.success(null);
+                }
                 case "applicationExists" -> result.success(applicationExists(call.arguments()));
                 case "launchActivityFromAction" -> result.success(launchActivityFromAction(call.arguments()));
                 case "launchApp" -> result.success(launchApp(call.arguments()));
@@ -197,6 +258,65 @@ public class MainActivity extends FlutterActivity {
 
         new EventChannel(messenger, NETWORK_EVENT_CHANNEL).setStreamHandler(
                 new NetworkEventStreamHandler(this));
+
+        commandsChannel = new MethodChannel(messenger, COMMANDS_CHANNEL);
+        registerCommandReceiver();
+    }
+
+    @Override
+    public void cleanUpFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+        if (commandReceiver != null) {
+            unregisterReceiver(commandReceiver);
+            commandReceiver = null;
+        }
+        super.cleanUpFlutterEngine(flutterEngine);
+    }
+
+    /**
+     * Passes {@code adb shell am broadcast -a <package>.COMMAND --es cmd ...} on to Dart, and answers with its
+     * output as the broadcast result: result=0 when the command worked, 1 when it failed. Only senders holding
+     * DUMP get through, which are the adb shell and the system, not other apps.
+     */
+    @SuppressWarnings("deprecation")
+    private void registerCommandReceiver() {
+        commandReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Map<String, String> arguments = new HashMap<>();
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    for (String key : extras.keySet()) {
+                        Object value = extras.get(key);
+                        arguments.put(key, value != null ? String.valueOf(value) : null);
+                    }
+                }
+
+                PendingResult pendingResult = goAsync();
+                commandsChannel.invokeMethod("run", arguments, new MethodChannel.Result() {
+                    @Override
+                    public void success(Object reply) {
+                        Map<?, ?> map = reply instanceof Map ? (Map<?, ?>) reply : new HashMap<>();
+                        boolean ok = Boolean.TRUE.equals(map.get("ok"));
+                        pendingResult.setResult(ok ? 0 : 1, String.valueOf(map.get("output")), null);
+                        pendingResult.finish();
+                    }
+
+                    @Override
+                    public void error(@NonNull String code, String message, Object details) {
+                        pendingResult.setResult(1, "error: " + message, null);
+                        pendingResult.finish();
+                    }
+
+                    @Override
+                    public void notImplemented() {
+                        pendingResult.setResult(1, "error: the launcher is still starting, try again in a moment", null);
+                        pendingResult.finish();
+                    }
+                });
+            }
+        };
+        ContextCompat.registerReceiver(this, commandReceiver, new IntentFilter(getPackageName() + ".COMMAND"),
+                Manifest.permission.DUMP, null, ContextCompat.RECEIVER_EXPORTED);
     }
 
     private List<Map<String, Serializable>> getApplications() {
@@ -343,6 +463,415 @@ public class MainActivity extends FlutterActivity {
         }
 
         return imageBytes;
+    }
+
+    /**
+     * Renders the launcher icon of [packageName] for app cards drawn on a generic background.
+     *
+     * [variant] is "full" (the icon as the system shows it), "foreground" (the foreground layer
+     * of an adaptive icon, without its own background) or "monochrome" (the themed icon layer,
+     * Android 13+). When the requested layer is missing the full icon is returned instead, and
+     * the returned "variant" says which one was actually rendered.
+     */
+    private Map<String, Object> getApplicationIconVariant(String packageName, String variant) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("bytes", new byte[0]);
+        result.put("variant", "full");
+
+        Drawable icon = loadHighResIcon(packageName);
+        if (icon == null) {
+            return result;
+        }
+
+        Bitmap fullBitmap = renderDrawable(icon, ICON_VARIANT_RENDER_SIZE);
+        Bitmap bitmap = fullBitmap;
+        String renderedVariant = "full";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && icon instanceof AdaptiveIconDrawable adaptiveIcon) {
+            Drawable layer = null;
+            if ("monochrome".equals(variant) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                layer = adaptiveIcon.getMonochrome();
+                if (layer != null) {
+                    layer = layer.mutate();
+                    layer.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+                    renderedVariant = "monochrome";
+                }
+            } else if ("foreground".equals(variant)) {
+                layer = adaptiveIcon.getForeground();
+                if (layer != null) {
+                    renderedVariant = "foreground";
+                }
+            }
+
+            if (layer != null) {
+                bitmap = renderAdaptiveIconLayer(layer, ICON_VARIANT_RENDER_SIZE);
+            }
+        }
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        result.put("bytes", stream.toByteArray());
+        result.put("variant", renderedVariant);
+        // Sampled from the full icon: brand colours often live in the adaptive background layer.
+        result.put("color", dominantColor(fullBitmap));
+        return result;
+    }
+
+    /** Loads the launch activity icon (leanback first) at the highest available density. */
+    private Drawable loadHighResIcon(String packageName) {
+        PackageManager packageManager = getPackageManager();
+        Intent launchIntent = packageManager.getLeanbackLaunchIntentForPackage(packageName);
+        if (launchIntent == null) {
+            launchIntent = packageManager.getLaunchIntentForPackage(packageName);
+        }
+
+        try {
+            ResolveInfo resolveInfo = launchIntent != null ? packageManager.resolveActivity(launchIntent, 0) : null;
+            if (resolveInfo != null && resolveInfo.activityInfo != null) {
+                ActivityInfo activityInfo = resolveInfo.activityInfo;
+                int iconResource = activityInfo.getIconResource();
+                if (iconResource != 0) {
+                    try {
+                        Resources resources = packageManager.getResourcesForApplication(activityInfo.applicationInfo);
+                        Drawable drawable = resources.getDrawableForDensity(iconResource, DisplayMetrics.DENSITY_XXXHIGH, null);
+                        if (drawable != null) {
+                            return drawable;
+                        }
+                    } catch (Resources.NotFoundException ignored) {
+                    }
+                }
+                return activityInfo.loadIcon(packageManager);
+            }
+            return packageManager.getApplicationIcon(packageName);
+        } catch (PackageManager.NameNotFoundException ignored) {
+            return null;
+        }
+    }
+
+    private Bitmap renderDrawable(Drawable drawable, int size) {
+        int width = drawable.getIntrinsicWidth();
+        int height = drawable.getIntrinsicHeight();
+        int bitmapWidth = size;
+        int bitmapHeight = size;
+        if (width > 0 && height > 0 && width != height) {
+            // Keep the aspect ratio of non-square legacy icons.
+            if (width > height) {
+                bitmapHeight = Math.max(1, size * height / width);
+            } else {
+                bitmapWidth = Math.max(1, size * width / height);
+            }
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, bitmapWidth, bitmapHeight);
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+    /**
+     * Adaptive icon layers are 108dp squares of which only the inner 72dp is ever visible, so the
+     * layer is drawn oversized to crop the reserved 18dp bleed on each side.
+     */
+    private Bitmap renderAdaptiveIconLayer(Drawable layer, int size) {
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        int bleed = size / 4;
+        layer.setBounds(-bleed, -bleed, size + bleed, size + bleed);
+        layer.draw(canvas);
+        return bitmap;
+    }
+
+    /** Average of the icon's opaque pixels, weighted towards saturated ones. */
+    private int dominantColor(Bitmap bitmap) {
+        Bitmap sample = Bitmap.createScaledBitmap(bitmap, 32, 32, true);
+        double red = 0, green = 0, blue = 0, totalWeight = 0;
+        float[] hsv = new float[3];
+        for (int y = 0; y < sample.getHeight(); y++) {
+            for (int x = 0; x < sample.getWidth(); x++) {
+                int pixel = sample.getPixel(x, y);
+                int alpha = Color.alpha(pixel);
+                if (alpha < 128) {
+                    continue;
+                }
+                Color.colorToHSV(pixel, hsv);
+                double weight = 0.15 + hsv[1] * hsv[2];
+                red += Color.red(pixel) * weight;
+                green += Color.green(pixel) * weight;
+                blue += Color.blue(pixel) * weight;
+                totalWeight += weight;
+            }
+        }
+        if (totalWeight == 0) {
+            return Color.DKGRAY;
+        }
+        return Color.rgb((int) (red / totalWeight), (int) (green / totalWeight), (int) (blue / totalWeight));
+    }
+
+    /**
+     * Lets the user pick a font file with whatever handles GET_CONTENT (a file manager on most
+     * TVs) and copies it into [directory]. Answers with the copied file path, or null.
+     */
+    private void pickFontFile(String directory, MethodChannel.Result result) {
+        if (pendingFontPickResult != null) {
+            pendingFontPickResult.success(null);
+        }
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("*/*")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                        "font/ttf", "font/otf", "font/sfnt", "application/x-font-ttf",
+                        "application/x-font-otf", "application/font-sfnt", "application/octet-stream"});
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            result.success(null);
+            return;
+        }
+
+        pendingFontPickResult = result;
+        pendingFontPickDirectory = directory;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_PICK_FONT);
+        } catch (Exception e) {
+            pendingFontPickResult = null;
+            result.success(null);
+        }
+    }
+
+    /**
+     * Lets the user pick a backup with whatever handles GET_CONTENT. Answers with its text, or null when
+     * cancelled; fails with "unavailable" when nothing on the device can pick files.
+     */
+    private void openBackupFile(MethodChannel.Result result) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("*/*")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                        "application/json", "text/plain", "application/octet-stream"});
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            result.error("unavailable", "No app on this device can open files", null);
+            return;
+        }
+        if (pendingOpenBackupResult != null) {
+            pendingOpenBackupResult.success(null);
+        }
+        pendingOpenBackupResult = result;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_OPEN_BACKUP);
+        } catch (Exception e) {
+            pendingOpenBackupResult = null;
+            result.error("unavailable", e.getMessage(), null);
+        }
+    }
+
+    private void onBackupFileOpened(Uri uri) {
+        MethodChannel.Result result = pendingOpenBackupResult;
+        pendingOpenBackupResult = null;
+        if (result == null) {
+            return;
+        }
+        if (uri == null) {
+            result.success(null);
+            return;
+        }
+
+        iconExecutor.execute(() -> {
+            String text = null;
+            String error = null;
+            try (InputStream input = getContentResolver().openInputStream(uri)) {
+                if (input == null) {
+                    throw new IOException("The file cannot be opened");
+                }
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[16 * 1024];
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                    if (output.size() > MAX_BACKUP_SIZE) {
+                        throw new IOException("The file is too large to be a backup");
+                    }
+                }
+                text = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            String finalText = text;
+            String finalError = error;
+            runOnUiThread(() -> {
+                if (finalError != null) {
+                    result.error("io", finalError, null);
+                } else {
+                    result.success(finalText);
+                }
+            });
+        });
+    }
+
+    /**
+     * Lets the user choose where to save a copy of a backup (CREATE_DOCUMENT). Answers true once written and
+     * false when cancelled; fails with "unavailable" when nothing on the device can save files.
+     */
+    private void saveBackupFile(String name, String content, MethodChannel.Result result) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .setType("application/json")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_TITLE, name);
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            result.error("unavailable", "No app on this device can save files", null);
+            return;
+        }
+        if (pendingSaveBackupResult != null) {
+            pendingSaveBackupResult.success(false);
+        }
+        pendingSaveBackupResult = result;
+        pendingSaveBackupContent = content;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_SAVE_BACKUP);
+        } catch (Exception e) {
+            pendingSaveBackupResult = null;
+            pendingSaveBackupContent = null;
+            result.error("unavailable", e.getMessage(), null);
+        }
+    }
+
+    private void onBackupFileCreated(Uri uri) {
+        MethodChannel.Result result = pendingSaveBackupResult;
+        String content = pendingSaveBackupContent;
+        pendingSaveBackupResult = null;
+        pendingSaveBackupContent = null;
+        if (result == null) {
+            return;
+        }
+        if (uri == null || content == null) {
+            result.success(false);
+            return;
+        }
+
+        iconExecutor.execute(() -> {
+            String error = null;
+            try (OutputStream output = getContentResolver().openOutputStream(uri, "w")) {
+                if (output == null) {
+                    throw new IOException("The file cannot be written");
+                }
+                output.write(content.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            String finalError = error;
+            runOnUiThread(() -> {
+                if (finalError != null) {
+                    result.error("io", finalError, null);
+                } else {
+                    result.success(true);
+                }
+            });
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Uri resultUri = resultCode == RESULT_OK && data != null ? data.getData() : null;
+        if (requestCode == REQUEST_CODE_OPEN_BACKUP) {
+            onBackupFileOpened(resultUri);
+            return;
+        }
+        if (requestCode == REQUEST_CODE_SAVE_BACKUP) {
+            onBackupFileCreated(resultUri);
+            return;
+        }
+        if (requestCode != REQUEST_CODE_PICK_FONT || pendingFontPickResult == null) {
+            return;
+        }
+
+        MethodChannel.Result result = pendingFontPickResult;
+        String directory = pendingFontPickDirectory;
+        pendingFontPickResult = null;
+        pendingFontPickDirectory = null;
+
+        Uri uri = data != null ? data.getData() : null;
+        if (resultCode != RESULT_OK || uri == null || directory == null) {
+            result.success(null);
+            return;
+        }
+
+        iconExecutor.execute(() -> {
+            String path = copyFontFile(uri, directory);
+            runOnUiThread(() -> result.success(path));
+        });
+    }
+
+    private String copyFontFile(Uri uri, String directory) {
+        String name = null;
+        try (Cursor cursor = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                name = cursor.getString(0);
+            }
+        } catch (Exception ignored) {
+        }
+        if (name == null) {
+            name = uri.getLastPathSegment();
+        }
+        if (name == null) {
+            name = "font.ttf";
+        }
+        name = new File(name).getName().replaceAll("[^A-Za-z0-9._ -]", "_");
+        String lowerName = name.toLowerCase();
+        if (!lowerName.endsWith(".ttf") && !lowerName.endsWith(".otf")) {
+            return null;
+        }
+
+        File directoryFile = new File(directory);
+        if (!directoryFile.exists() && !directoryFile.mkdirs()) {
+            return null;
+        }
+        File target = new File(directoryFile, name);
+        try (InputStream input = getContentResolver().openInputStream(uri);
+             OutputStream output = new FileOutputStream(target)) {
+            if (input == null) {
+                return null;
+            }
+            byte[] buffer = new byte[16 * 1024];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+            return target.getAbsolutePath();
+        } catch (Exception e) {
+            target.delete();
+            return null;
+        }
+    }
+
+    /**
+     * Uses the same system UI flags as Flutter's PlatformPlugin, so "visible" restores exactly the
+     * state Flutter sets up, and Flutter re-applying its own flags on resume is undone by
+     * {@link #onWindowFocusChanged(boolean)}.
+     */
+    @SuppressWarnings("deprecation")
+    private void applyNavigationBarState() {
+        int flags = PlatformPlugin.DEFAULT_SYSTEM_UI;
+        if (!"visible".equals(navigationBarMode)) {
+            // Lay out behind the bar, so revealing it overlays the launcher instead of resizing it.
+            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            if (!navigationBarRevealed) {
+                // Sticky: a swipe from the bottom edge still shows the bar for a moment.
+                flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            }
+        }
+        getWindow().getDecorView().setSystemUiVisibility(flags);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && !"visible".equals(navigationBarMode)) {
+            navigationBarRevealed = false;
+            applyNavigationBarState();
+        }
     }
 
     private boolean applicationExists(String packageName) {

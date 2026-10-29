@@ -46,14 +46,14 @@ class CategoryRow extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    final showAppNames = context.select<SettingsService, bool>((s) => s.showAppNamesBelowIcons);
+    final captionHeight = context.select<SettingsService, double>((s) => s.appCaptionStyle.reservedHeight);
     Widget categoryContent;
     if (applications.isEmpty) {
       categoryContent = categoryContainerEmptyState(context);
     }
     else {
       categoryContent = SizedBox(
-        height: category.rowHeight.toDouble() + (showAppNames ? kAppNameLabelHeight : 0),
+        height: category.rowHeight.toDouble() + captionHeight,
         child: ListView.custom(
           padding: const EdgeInsets.all(8),
           scrollDirection: Axis.horizontal,

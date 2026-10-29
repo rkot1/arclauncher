@@ -22,9 +22,12 @@ import 'dart:math';
 import 'package:flauncher/actions.dart';
 import 'package:flauncher/l10n/app_localizations.dart';
 import 'package:flauncher/app_image_type.dart';
+import 'package:flauncher/models/app_card_style.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
+import 'package:flauncher/widgets/app_caption.dart';
 import 'package:flauncher/widgets/app_card_contour_painter.dart';
+import 'package:flauncher/widgets/app_icon_face.dart';
 import 'package:flauncher/widgets/application_info_panel.dart';
 import 'package:flauncher/widgets/focus_keyboard_listener.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +44,6 @@ const kAppCardAspectRatio = 16 / 9;
 const kAppCardHorizontalPadding = 12.0;
 const kAppCardVerticalPadding = 9.0;
 const kLauncherSectionHorizontalPadding = 24.0;
-const kAppNameLabelHeight = 24.0;
 
 /// Row extent for a grid/dock line given the content width between section paddings.
 double appCardRowExtentFromContentWidth(double contentWidth, {int columnCount = Category.ColumnsCount}) {
@@ -49,10 +51,10 @@ double appCardRowExtentFromContentWidth(double contentWidth, {int columnCount = 
   return slotWidth / kAppCardAspectRatio;
 }
 
-/// Adjusted aspect ratio for grid cells that includes space for the app name label.
-double appCardGridAspectRatio(double crossAxisExtent, int columnsCount) {
+/// Adjusted aspect ratio for grid cells that includes [labelHeight] for the app name below the card.
+double appCardGridAspectRatio(double crossAxisExtent, int columnsCount, double labelHeight) {
   final cellWidth = crossAxisExtent / columnsCount;
-  return cellWidth / (cellWidth / kAppCardAspectRatio + kAppNameLabelHeight);
+  return cellWidth / (cellWidth / kAppCardAspectRatio + labelHeight);
 }
 
 class AppCard extends StatefulWidget {
@@ -100,8 +102,12 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   DateTime? _lastEnsureVisibleAt;
   late FocusNode _focusNode;
 
-  (AppImageType, ImageProvider)? _loadedImage;
+  AppCardImage? _cardImage;
+  ImageProvider? _imageProvider;
   bool _imageLoadError = false;
+  // The icon settings the current image was loaded for; null forces a reload.
+  Object? _imageLoadKey;
+  int _imageLoadGeneration = 0;
 
   late final AnimationController _animation;
 
@@ -118,7 +124,6 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
     _isTraditionalHighlightMode = FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
 
     FocusManager.instance.addHighlightModeListener(_focusHighlightModeChanged);
-    _loadAppImage(Provider.of<AppsService>(context, listen: false));
 
     // Check if we need to restore focus/reorder mode after a move
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,11 +147,12 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
     final appsService = Provider.of<AppsService>(context, listen: false);
 
     if (oldWidget.application.packageName != widget.application.packageName) {
-      _loadedImage = null;
+      _cardImage = null;
+      _imageProvider = null;
       _imageLoadError = false;
-      _loadAppImage(appsService);
+      _imageLoadKey = null;
     } else if (appsService.consumeDirtyImage(widget.application.packageName)) {
-      _loadAppImage(appsService);
+      _imageLoadKey = null;
     }
 
     // Check for pending focus on update as well
@@ -178,7 +184,8 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final bool showAppNames = context.select<SettingsService, bool>((s) => s.showAppNamesBelowIcons);
+    final captionStyle = context.select<SettingsService, AppCaptionStyle>((s) => s.appCaptionStyle);
+    final iconStyle = context.select<SettingsService, AppIconStyle>((s) => s.appIconStyle);
     final (bool animationEnabled, String accentColorHex, bool showFocusBorders, double borderThickness) = context.select<SettingsService, (bool, String, bool, double)>(
       (s) => (s.appHighlightAnimationEnabled, s.accentColorHex, s.showFocusBorders, s.focusBorderThickness),
     );
@@ -192,10 +199,20 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
         if (mounted) _updateHighlightAnimation();
       });
     }
-    final appImageWidget = _appImage();
-    final bool shouldHighlight = _shouldHighlight();
+    final imageLoadKey = (iconStyle.mode, iconStyle.variant);
+    if (imageLoadKey != _imageLoadKey) {
+      _imageLoadKey = imageLoadKey;
+      _loadAppImage(Provider.of<AppsService>(context, listen: false), iconStyle);
+    }
 
-    return FocusKeyboardListener(
+    final bool shouldHighlight = _shouldHighlight();
+    final bool captionOnCard = captionStyle.visible && captionStyle.position == AppCaptionPosition.overlay;
+    final double captionOpacity =
+        captionStyle.visibility == AppCaptionVisibility.focused && !shouldHighlight ? 0.0 : 1.0;
+    final bool iconFace = _cardImage?.icon != null;
+    final appImageWidget = _appImage(iconStyle, captionOnCard ? captionStyle.boxHeight + 6 : 0);
+
+    return _boundToCardWidth(captionStyle.reservedHeight, FocusKeyboardListener(
       onPressed: _onPressed,
       onLongPress: _onLongPress,
       child: AnimatedScale(
@@ -219,10 +236,30 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
+                          if (iconStyle.shadow == AppCardShadow.glow)
+                            IgnorePointer(
+                              child: AnimatedOpacity(
+                                duration: _focusAnimationDuration,
+                                opacity: shouldHighlight ? 1.0 : 0.0,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _accentColor.withValues(alpha: 0.55),
+                                        blurRadius: 18,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           Material(
                             borderRadius: BorderRadius.circular(12),
                             clipBehavior: Clip.antiAlias,
-                            elevation: shouldHighlight ? 7 : 4,
+                            color: iconFace && iconStyle.translucentCard ? Colors.transparent : null,
+                            elevation: _cardElevation(iconStyle.shadow, shouldHighlight),
                             shadowColor: Colors.black,
                             child: Stack(
                               fit: StackFit.expand,
@@ -238,6 +275,29 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
                                     _handleFocusChange(context, focused);
                                   },
                                 ),
+                                if (captionOnCard)
+                                  Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    child: IgnorePointer(
+                                      child: AnimatedOpacity(
+                                        duration: _focusAnimationDuration,
+                                        opacity: captionOpacity,
+                                        child: Padding(
+                                          padding: captionStyle.background == AppCaptionBackground.bar
+                                              ? EdgeInsets.zero
+                                              : const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                                          child: AppCaption(
+                                            name: widget.application.name,
+                                            style: captionStyle,
+                                            accentColor: _accentColor,
+                                            onCard: true,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 if (_moving) ..._arrows(),
                                 IgnorePointer(
                                   child: AnimatedOpacity(
@@ -283,36 +343,86 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
                 ),
                 ),
               ),
-              if (showAppNames)
-                Padding(padding: const EdgeInsets.only(top: 8.0), child: _AppNameLabel(name: widget.application.name)),
+              if (captionStyle.reservedHeight > 0)
+                SizedBox(
+                  height: captionStyle.reservedHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: kCaptionGap),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: AnimatedOpacity(
+                        duration: _focusAnimationDuration,
+                        opacity: captionOpacity,
+                        child: AppCaption(
+                          name: widget.application.name,
+                          style: captionStyle,
+                          accentColor: _accentColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
       ),
+    ));
+  }
+
+  /// In horizontal rows the card width follows from its height, so a caption
+  /// below it must be bounded to that width rather than to its own text.
+  Widget _boundToCardWidth(double captionHeight, Widget card) {
+    if (captionHeight == 0 || !widget.enforceAspectRatio) {
+      return card;
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.hasBoundedWidth || !constraints.hasBoundedHeight) {
+          return card;
+        }
+        final cardHeight = constraints.maxHeight - captionHeight;
+        if (cardHeight <= 0) {
+          return card;
+        }
+        return SizedBox(width: cardHeight * kAppCardAspectRatio, child: card);
+      },
     );
   }
 
-  Future<void> _loadAppImage(AppsService service) async {
+  Future<void> _loadAppImage(AppsService service, AppIconStyle style) async {
+    final generation = ++_imageLoadGeneration;
     try {
-      Uint8List bytes = Uint8List(0);
-
-      bytes = await service.getAppBanner(widget.application.packageName);
-      AppImageType type = AppImageType.Banner;
-      if (bytes.isEmpty) {
-        type = AppImageType.Icon;
-        bytes = await service.getAppIcon(widget.application.packageName);
+      final cardImage = await service.getAppCardImage(widget.application.packageName, style);
+      if (!mounted || generation != _imageLoadGeneration) {
+        return;
       }
-      if (mounted) {
-        setState(() {
-          _loadedImage = (type, ResizeImage(MemoryImage(bytes), width: 480));
-        });
+      if (cardImage.bytes.isEmpty) {
+        throw StateError('No image for ${widget.application.packageName}');
       }
+      setState(() {
+        _cardImage = cardImage;
+        // Platform icon variants are already rendered at card size.
+        _imageProvider = cardImage.icon != null
+            ? MemoryImage(cardImage.bytes)
+            : ResizeImage(MemoryImage(cardImage.bytes), width: 480);
+        _imageLoadError = false;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() => _imageLoadError = true);
+      if (mounted && generation == _imageLoadGeneration) {
+        setState(() {
+          _cardImage = null;
+          _imageProvider = null;
+          _imageLoadError = true;
+        });
       }
     }
   }
+
+  double _cardElevation(AppCardShadow shadow, bool highlighted) => switch (shadow) {
+        AppCardShadow.none => 0,
+        AppCardShadow.strong => highlighted ? 16 : 10,
+        AppCardShadow.normal || AppCardShadow.glow => highlighted ? 7 : 4,
+      };
 
   Widget _wrapAspectRatio(Widget child) {
     if (widget.enforceAspectRatio) {
@@ -321,13 +431,22 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
     return child;
   }
 
-  Widget _appImage() {
+  Widget _appImage(AppIconStyle iconStyle, double captionInset) {
     App app = widget.application;
 
-    if (_loadedImage != null) {
-      final (type, image) = _loadedImage!;
-      if (type == AppImageType.Banner) {
+    final cardImage = _cardImage;
+    final image = _imageProvider;
+    if (cardImage != null && image != null) {
+      if (cardImage.type == AppImageType.Banner) {
         return Ink.image(image: image, fit: BoxFit.cover);
+      } else if (cardImage.icon != null) {
+        return AppIconFace(
+          image: image,
+          icon: cardImage.icon!,
+          style: iconStyle,
+          accentColor: _accentColor,
+          bottomInset: captionInset,
+        );
       } else {
         return Padding(
           padding: const EdgeInsets.all(8),
@@ -613,23 +732,6 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
     if (result == ApplicationInfoPanelResult.reorderApp) {
       setState(() => _moving = true);
     }
-  }
-}
-
-class _AppNameLabel extends StatelessWidget {
-  final String name;
-
-  const _AppNameLabel({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      name,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 12),
-      overflow: TextOverflow.ellipsis,
-      maxLines: 1,
-      textAlign: TextAlign.center,
-    );
   }
 }
 

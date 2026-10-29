@@ -771,4 +771,303 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get brightnessSlotNight => '22:00–6:00';
+
+  @override
+  String get appIconsSettings => 'Biểu tượng ứng dụng';
+
+  @override
+  String get appCaptionsSettings => 'Tên ứng dụng';
+
+  @override
+  String get appCardImageMode => 'Nội dung ô ứng dụng';
+
+  @override
+  String get cardModeBanner => 'Ảnh đại diện';
+
+  @override
+  String get cardModeBannerOrIcon =>
+      'Ảnh đại diện, nếu không có thì biểu tượng';
+
+  @override
+  String get cardModeIcon => 'Chỉ biểu tượng';
+
+  @override
+  String get appIconVariant => 'Biểu tượng';
+
+  @override
+  String get iconVariantFull => 'Biểu tượng đầy đủ';
+
+  @override
+  String get iconVariantForeground => 'Lớp tiền cảnh';
+
+  @override
+  String get iconVariantMonochrome => 'Đơn sắc';
+
+  @override
+  String get appIconSize => 'Kích thước biểu tượng';
+
+  @override
+  String get sizeSmall => 'Nhỏ';
+
+  @override
+  String get sizeMedium => 'Vừa';
+
+  @override
+  String get sizeLarge => 'Lớn';
+
+  @override
+  String get appIconTint => 'Màu biểu tượng';
+
+  @override
+  String get iconColor => 'Màu của biểu tượng';
+
+  @override
+  String get appCardBackground => 'Nền';
+
+  @override
+  String get backgroundSolidColor => 'Màu đơn';
+
+  @override
+  String get backgroundGradient => 'Màu chuyển sắc';
+
+  @override
+  String get backgroundTranslucent => 'Trong mờ';
+
+  @override
+  String get backgroundImage => 'Hình ảnh';
+
+  @override
+  String get backgroundChooseImage => 'Chọn ảnh nền';
+
+  @override
+  String get backgroundNoImage => 'Chưa chọn ảnh';
+
+  @override
+  String get appCardShadow => 'Đổ bóng ô ứng dụng';
+
+  @override
+  String get appIconsHint =>
+      'Biểu tượng được lấy từ gói của từng ứng dụng. Lớp tiền cảnh và Đơn sắc cần biểu tượng thích ứng hoặc biểu tượng theo chủ đề; các ứng dụng khác giữ biểu tượng đầy đủ. Ảnh đại diện tùy chỉnh luôn được ưu tiên.';
+
+  @override
+  String get captionVisibility => 'Hiện tên';
+
+  @override
+  String get captionVisibilityHidden => 'Không bao giờ';
+
+  @override
+  String get captionVisibilityAlways => 'Luôn luôn';
+
+  @override
+  String get captionVisibilityFocused => 'Khi được chọn';
+
+  @override
+  String get captionPosition => 'Vị trí';
+
+  @override
+  String get captionPositionBelow => 'Dưới ô';
+
+  @override
+  String get captionPositionOverlay => 'Trên ô';
+
+  @override
+  String get captionFont => 'Phông chữ';
+
+  @override
+  String get captionFontDefault => 'Mặc định';
+
+  @override
+  String get captionImportFont => 'Nhập tệp phông chữ';
+
+  @override
+  String captionImportFontHint(String path) {
+    return 'Hoặc sao chép tệp .ttf / .otf vào $path';
+  }
+
+  @override
+  String get captionFontSize => 'Cỡ chữ';
+
+  @override
+  String get captionFontWeight => 'Độ đậm';
+
+  @override
+  String get fontWeightLight => 'Mảnh';
+
+  @override
+  String get fontWeightRegular => 'Thường';
+
+  @override
+  String get fontWeightMedium => 'Vừa';
+
+  @override
+  String get fontWeightSemiBold => 'Hơi đậm';
+
+  @override
+  String get fontWeightBold => 'Đậm';
+
+  @override
+  String get fontWeightBlack => 'Rất đậm';
+
+  @override
+  String get captionLetterCase => 'Kiểu chữ';
+
+  @override
+  String get captionCaseNormal => 'Bình thường';
+
+  @override
+  String get captionCaseUppercase => 'IN HOA';
+
+  @override
+  String get captionAlignment => 'Căn lề';
+
+  @override
+  String get captionAlignStart => 'Đầu dòng';
+
+  @override
+  String get captionAlignCenter => 'Giữa';
+
+  @override
+  String get captionColor => 'Màu';
+
+  @override
+  String get captionColorTheme => 'Theo giao diện';
+
+  @override
+  String get captionColorMuted => 'Nhạt';
+
+  @override
+  String get captionColorAccent => 'Màu nhấn';
+
+  @override
+  String get captionBackground => 'Nền';
+
+  @override
+  String get captionBackgroundPill => 'Viên thuốc';
+
+  @override
+  String get captionBackgroundBar => 'Thanh';
+
+  @override
+  String get captionTextShadow => 'Bóng chữ';
+
+  @override
+  String get captionBoxShadow => 'Bóng khung';
+
+  @override
+  String get styleNone => 'Không';
+
+  @override
+  String get shadowDefault => 'Mặc định';
+
+  @override
+  String get shadowSoft => 'Nhẹ';
+
+  @override
+  String get shadowStrong => 'Đậm';
+
+  @override
+  String get shadowOutline => 'Viền chữ';
+
+  @override
+  String get shadowGlow => 'Phát sáng màu nhấn';
+
+  @override
+  String get systemNavigationBar => 'Thanh điều hướng hệ thống';
+
+  @override
+  String get navigationBarVisible => 'Luôn hiện';
+
+  @override
+  String get navigationBarHidden => 'Ẩn, vuốt lên để hiện';
+
+  @override
+  String get navigationBarBottomEdge => 'Hiện ở mép dưới';
+
+  @override
+  String get backupSettings => 'Sao lưu và khôi phục';
+
+  @override
+  String get backupExport => 'Xuất cài đặt và bố cục';
+
+  @override
+  String get backupExportHint => 'Lưu một tệp JSON vào thư mục sao lưu';
+
+  @override
+  String get backupSaveCopy => 'Lưu bản sao vào…';
+
+  @override
+  String get backupSaveCopyHint => 'Chọn nơi lưu, ví dụ ổ USB';
+
+  @override
+  String get backupRestoreFromFile => 'Khôi phục từ tệp…';
+
+  @override
+  String get backupSavedBackups => 'Các bản sao lưu';
+
+  @override
+  String get backupNoBackups => 'Chưa có bản sao lưu nào';
+
+  @override
+  String get backupBeforeRestore => 'Được lưu trước lần khôi phục gần nhất';
+
+  @override
+  String backupSavedTo(String path) {
+    return 'Đã lưu vào $path';
+  }
+
+  @override
+  String get backupCopySaved => 'Đã lưu bản sao';
+
+  @override
+  String get backupSaveUnavailable =>
+      'Không có ứng dụng nào trên thiết bị này có thể lưu tệp. Hãy sao chép bản sao lưu từ thư mục bên dưới bằng adb.';
+
+  @override
+  String get backupOpenUnavailable =>
+      'Không có ứng dụng nào trên thiết bị này có thể mở tệp. Hãy sao chép tệp vào thư mục bên dưới.';
+
+  @override
+  String get backupRestoreTitle => 'Khôi phục bản sao lưu này?';
+
+  @override
+  String backupRestoreBody(String undoFile) {
+    return 'Cài đặt và bố cục của bạn sẽ được thay thế. Cài đặt hiện tại được lưu trước dưới tên $undoFile để bạn có thể quay lại.';
+  }
+
+  @override
+  String get backupRestore => 'Khôi phục';
+
+  @override
+  String get backupRestored => 'Đã khôi phục bản sao lưu';
+
+  @override
+  String backupRestoredSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Đã khôi phục bản sao lưu. Đã bỏ qua $count ứng dụng chưa được cài đặt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreFailed(String error) {
+    return 'Không thể khôi phục: $error';
+  }
+
+  @override
+  String backupExportFailed(String error) {
+    return 'Không thể lưu: $error';
+  }
+
+  @override
+  String backupFolderHint(String path) {
+    return 'Thư mục sao lưu: $path';
+  }
+
+  @override
+  String backupAdbHint(String package) {
+    return 'Chỉnh cài đặt từ máy tính: adb shell am broadcast -a $package.COMMAND --es cmd help';
+  }
 }

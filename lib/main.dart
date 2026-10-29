@@ -18,9 +18,12 @@
 
 import 'dart:async';
 
+import 'package:flauncher/custom_fonts.dart';
 import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
+import 'package:flauncher/launcher_commands.dart';
 import 'package:flauncher/providers/apps_service.dart';
+import 'package:flauncher/providers/backup_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
 import 'package:flauncher/providers/network_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
@@ -39,13 +42,16 @@ Future<void> main() async {
   initializeDateFormatting();
 
   final sharedPreferences = await SharedPreferences.getInstance();
+  final settingsService = SettingsService(sharedPreferences);
+  // Captions re-layout once a custom font finishes loading, so this need not block startup.
+  unawaited(CustomFonts.ensureLoaded(settingsService.appCaptionStyle.font));
   final fLauncherChannel = FLauncherChannel();
   final fLauncherDatabase = FLauncherDatabase(connect());
 
   runApp(MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (_) => SettingsService(sharedPreferences),
+            create: (_) => settingsService,
             lazy: false),
         ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase)),
         ChangeNotifierProvider(create: (_) => LauncherState()),
@@ -65,6 +71,20 @@ Future<void> main() async {
               final settingsService = Provider.of<SettingsService>(context, listen: false);
               return WatchNextService(fLauncherChannel, settingsService: settingsService);
             },
+            lazy: false
+        ),
+        Provider(
+            create: (context) => BackupService(
+                  sharedPreferences,
+                  Provider.of(context, listen: false),
+                  Provider.of(context, listen: false),
+                  Provider.of(context, listen: false),
+                ),
+            lazy: false
+        ),
+        Provider(
+            create: (context) => LauncherCommands(Provider.of(context, listen: false))..attach(),
+            dispose: (_, LauncherCommands commands) => commands.detach(),
             lazy: false
         ),
       ],

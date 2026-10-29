@@ -18,6 +18,8 @@
 
 import 'dart:async';
 
+import 'package:flauncher/models/app_card_style.dart';
+import 'package:flauncher/models/setting_spec.dart';
 import 'package:flauncher/providers/reddit_slideshow.dart';
 import 'package:flauncher/providers/unsplash_slideshow.dart';
 import 'package:flauncher/widgets/settings/back_button_actions.dart';
@@ -56,6 +58,40 @@ const String _dockShadowEnabled = "dock_shadow_enabled";
 const String _showFocusBorders = "show_focus_borders";
 const String _focusBorderThickness = "focus_border_thickness";
 
+const String _appCaptionVisibility = "app_caption_visibility";
+const String _appCaptionPosition = "app_caption_position";
+const String _appCaptionFont = "app_caption_font";
+const String _appCaptionFontSize = "app_caption_font_size";
+const String _appCaptionFontWeight = "app_caption_font_weight";
+const String _appCaptionCase = "app_caption_case";
+const String _appCaptionAlignment = "app_caption_alignment";
+const String _appCaptionColor = "app_caption_color";
+const String _appCaptionBackground = "app_caption_background";
+const String _appCaptionTextShadow = "app_caption_text_shadow";
+const String _appCaptionBoxShadow = "app_caption_box_shadow";
+
+const String _appCardImageMode = "app_card_image_mode";
+const String _appIconVariant = "app_icon_variant";
+const String _appIconSize = "app_icon_size";
+const String _appIconTint = "app_icon_tint";
+const String _appCardBackground = "app_card_background";
+const String _appCardBackgroundColor = "app_card_background_color";
+const String _appCardGradient = "app_card_gradient";
+const String _appCardBackgroundImage = "app_card_background_image";
+const String _appCardShadow = "app_card_shadow";
+const String _navigationBarMode = "navigation_bar_mode";
+
+/// How the system navigation bar (back / home / recents) is shown over the launcher.
+enum SystemNavigationBarMode {
+  visible,
+
+  /// Hidden; a swipe up from the bottom edge shows it for a moment.
+  hidden,
+
+  /// Hidden, and shown while the mouse pointer is on the bottom edge of the screen.
+  bottomEdge,
+}
+
 // Focus border thickness options (in dp)
 const double FOCUS_BORDER_THIN = 1.0;
 const double FOCUS_BORDER_DEFAULT = 1.5;
@@ -91,6 +127,76 @@ const String ACCENT_COLOR_AMBER = "FFAB00";
 const String ACCENT_COLOR_ROSE = "FF4081";
 const String ACCENT_COLOR_ICE_BLUE = "80D8FF";
 
+const String _hexColorPattern = r"^[0-9A-Fa-f]{6}$";
+
+/// Everything [SettingsService] stores that a backup carries and adb commands may change.
+///
+/// Left out: what is shown about the current wallpaper, and paths to files on this device.
+final List<SettingSpec> settingSpecs = [
+  const SettingSpec(_appHighlightAnimationEnabledKey, SettingType.boolean),
+  const SettingSpec(_appKeyClickEnabledKey, SettingType.boolean),
+  const SettingSpec(_autoHideAppBar, SettingType.boolean),
+  const SettingSpec(_hideStatusBarInGrid, SettingType.boolean),
+  const SettingSpec(_gradientUuidKey, SettingType.string),
+  const SettingSpec(_backButtonAction, SettingType.string,
+      choices: [BACK_BUTTON_ACTION_NOTHING, BACK_BUTTON_ACTION_CLOCK, BACK_BUTTON_ACTION_SCREENSAVER]),
+  const SettingSpec(_dateFormat, SettingType.string),
+  const SettingSpec(_timeFormat, SettingType.string),
+  const SettingSpec(_showCategoryTitles, SettingType.boolean),
+  const SettingSpec(_showDateInStatusBar, SettingType.boolean),
+  const SettingSpec(_showTimeInStatusBar, SettingType.boolean),
+  const SettingSpec(_wifiUsagePeriod, SettingType.string,
+      choices: [WIFI_USAGE_DAILY, WIFI_USAGE_WEEKLY, WIFI_USAGE_MONTHLY]),
+  const SettingSpec(_showWifiWidgetInStatusBar, SettingType.boolean),
+  const SettingSpec(_showNetworkIndicatorInStatusBar, SettingType.boolean),
+  const SettingSpec(_accentColor, SettingType.string, pattern: _hexColorPattern),
+  const SettingSpec(_screensaverClockStyle, SettingType.string,
+      choices: ["minimal", "bold", "retro", "elegant", "neon", "pixel", "digital"]),
+  const SettingSpec(_dockBackdropFilterDisabled, SettingType.boolean),
+  const SettingSpec(_backgroundBlurDisabled, SettingType.boolean),
+  const SettingSpec(_showWatchNextSection, SettingType.boolean),
+  const SettingSpec(_watchNextBigPictureMode, SettingType.boolean),
+  const SettingSpec(_watchNextHideProgramsWithoutImages, SettingType.boolean),
+  const SettingSpec(_watchNextMaxItems, SettingType.integer, min: 0, max: 50),
+  const SettingSpec(_watchNextExcludedPackages, SettingType.stringList),
+  const SettingSpec(_dockDarkBackground, SettingType.boolean),
+  const SettingSpec(_dockShadowEnabled, SettingType.boolean),
+  const SettingSpec(_showFocusBorders, SettingType.boolean),
+  const SettingSpec(_focusBorderThickness, SettingType.decimal, min: 0.5, max: 8),
+  SettingSpec.choice(_appCaptionVisibility, AppCaptionVisibility.values),
+  SettingSpec.choice(_appCaptionPosition, AppCaptionPosition.values),
+  const SettingSpec(_appCaptionFont, SettingType.string),
+  const SettingSpec(_appCaptionFontSize, SettingType.decimal, min: 6, max: 48),
+  const SettingSpec(_appCaptionFontWeight, SettingType.integer, min: 100, max: 900),
+  SettingSpec.choice(_appCaptionCase, AppCaptionCase.values),
+  SettingSpec.choice(_appCaptionAlignment, AppCaptionAlignment.values),
+  SettingSpec.choice(_appCaptionColor, AppCaptionColor.values),
+  SettingSpec.choice(_appCaptionBackground, AppCaptionBackground.values),
+  SettingSpec.choice(_appCaptionTextShadow, AppCaptionTextShadow.values),
+  SettingSpec.choice(_appCaptionBoxShadow, AppCaptionBoxShadow.values),
+  SettingSpec.choice(_appCardImageMode, AppCardImageMode.values),
+  SettingSpec.choice(_appIconVariant, AppIconVariant.values),
+  SettingSpec.choice(_appIconSize, AppIconSize.values),
+  SettingSpec.choice(_appIconTint, AppIconTint.values),
+  SettingSpec.choice(_appCardBackground, AppCardBackground.values),
+  const SettingSpec(_appCardBackgroundColor, SettingType.string, pattern: _hexColorPattern),
+  SettingSpec(_appCardGradient, SettingType.integer, min: 0, max: kAppCardGradients.length - 1),
+  SettingSpec.choice(_appCardShadow, AppCardShadow.values),
+  SettingSpec.choice(_navigationBarMode, SystemNavigationBarMode.values),
+  const SettingSpec("time_based_wallpaper_enabled", SettingType.boolean),
+  const SettingSpec("unsplash_access_key", SettingType.string, secret: true),
+  const SettingSpec("unsplash_slideshow_enabled", SettingType.boolean),
+  const SettingSpec("unsplash_interval_minutes", SettingType.integer, min: 1),
+  const SettingSpec("unsplash_day_sources", SettingType.stringList),
+  const SettingSpec("unsplash_night_sources", SettingType.stringList),
+  const SettingSpec("reddit_wallpaper_enabled", SettingType.boolean),
+  const SettingSpec("reddit_interval_minutes", SettingType.integer, min: 1),
+  const SettingSpec("reddit_subreddits", SettingType.stringList),
+  SettingSpec("reddit_sort", SettingType.string, choices: [for (final sort in RedditSort.values) sort.key]),
+  const SettingSpec("reddit_client_id", SettingType.string, secret: true),
+  const SettingSpec("reddit_client_secret", SettingType.string, secret: true),
+];
+
 class SettingsService extends ChangeNotifier {
   static final defaultDateFormat = "EEEE d";
   static final defaultTimeFormat = "H:mm";
@@ -107,7 +213,56 @@ class SettingsService extends ChangeNotifier {
 
   bool get showCategoryTitles => _sharedPreferences.getBool(_showCategoryTitles) ?? false;
 
-  bool get showAppNamesBelowIcons => _sharedPreferences.getBool(_showAppNamesBelowIcons) ?? false;
+  /// Whether app names are shown at all; their placement and look live in [appCaptionStyle].
+  bool get showAppNamesBelowIcons => appCaptionStyle.visible;
+
+  AppCaptionStyle get appCaptionStyle {
+    const defaults = AppCaptionStyle();
+    // Captions used to be a single on/off switch.
+    final legacyVisibility = (_sharedPreferences.getBool(_showAppNamesBelowIcons) ?? false)
+        ? AppCaptionVisibility.always
+        : AppCaptionVisibility.hidden;
+
+    return AppCaptionStyle(
+      visibility: _enumPref(_appCaptionVisibility, AppCaptionVisibility.values, legacyVisibility),
+      position: _enumPref(_appCaptionPosition, AppCaptionPosition.values, defaults.position),
+      font: _sharedPreferences.getString(_appCaptionFont) ?? defaults.font,
+      fontSize: _sharedPreferences.getDouble(_appCaptionFontSize) ?? defaults.fontSize,
+      fontWeight: _sharedPreferences.getInt(_appCaptionFontWeight) ?? defaults.fontWeight,
+      letterCase: _enumPref(_appCaptionCase, AppCaptionCase.values, defaults.letterCase),
+      alignment: _enumPref(_appCaptionAlignment, AppCaptionAlignment.values, defaults.alignment),
+      color: _enumPref(_appCaptionColor, AppCaptionColor.values, defaults.color),
+      background: _enumPref(_appCaptionBackground, AppCaptionBackground.values, defaults.background),
+      textShadow: _enumPref(_appCaptionTextShadow, AppCaptionTextShadow.values, defaults.textShadow),
+      boxShadow: _enumPref(_appCaptionBoxShadow, AppCaptionBoxShadow.values, defaults.boxShadow),
+    );
+  }
+
+  AppIconStyle get appIconStyle {
+    const defaults = AppIconStyle();
+    return AppIconStyle(
+      mode: _enumPref(_appCardImageMode, AppCardImageMode.values, defaults.mode),
+      variant: _enumPref(_appIconVariant, AppIconVariant.values, defaults.variant),
+      size: _enumPref(_appIconSize, AppIconSize.values, defaults.size),
+      tint: _enumPref(_appIconTint, AppIconTint.values, defaults.tint),
+      background: _enumPref(_appCardBackground, AppCardBackground.values, defaults.background),
+      backgroundColorHex: _sharedPreferences.getString(_appCardBackgroundColor) ?? defaults.backgroundColorHex,
+      gradientIndex: _sharedPreferences.getInt(_appCardGradient) ?? defaults.gradientIndex,
+      backgroundImagePath: _sharedPreferences.getString(_appCardBackgroundImage) ?? defaults.backgroundImagePath,
+      shadow: _enumPref(_appCardShadow, AppCardShadow.values, defaults.shadow),
+    );
+  }
+
+  SystemNavigationBarMode get navigationBarMode =>
+      _enumPref(_navigationBarMode, SystemNavigationBarMode.values, SystemNavigationBarMode.visible);
+
+  Future<void> setNavigationBarMode(SystemNavigationBarMode mode) async {
+    await _sharedPreferences.setString(_navigationBarMode, mode.name);
+    notifyListeners();
+  }
+
+  T _enumPref<T extends Enum>(String key, List<T> values, T fallback) =>
+      values.asNameMap()[_sharedPreferences.getString(key)] ?? fallback;
 
   bool get showDateInStatusBar => _sharedPreferences.getBool(_showDateInStatusBar) ?? false;
 
@@ -164,6 +319,15 @@ class SettingsService extends ChangeNotifier {
 
   SettingsService(this._sharedPreferences);
 
+  /// Tells listeners about values written straight to preferences, e.g. by a backup restore.
+  Future<void> reload() async {
+    if (_sharedPreferences.containsKey(_appCaptionVisibility)) {
+      // Keep the legacy switch in step, as [setAppCaptionStyle] does.
+      await _sharedPreferences.setBool(_showAppNamesBelowIcons, appCaptionStyle.visible);
+    }
+    notifyListeners();
+  }
+
   Future<void> set(String key, bool value) async {
     await _sharedPreferences.setBool(key, value);
     notifyListeners();
@@ -211,7 +375,42 @@ class SettingsService extends ChangeNotifier {
   }
 
   Future<void> setShowAppNamesBelowIcons(bool show) async {
-    return set(_showAppNamesBelowIcons, show);
+    return setAppCaptionStyle(
+      appCaptionStyle.copyWith(visibility: show ? AppCaptionVisibility.always : AppCaptionVisibility.hidden),
+    );
+  }
+
+  Future<void> setAppCaptionStyle(AppCaptionStyle style) async {
+    await Future.wait([
+      _sharedPreferences.setBool(_showAppNamesBelowIcons, style.visible),
+      _sharedPreferences.setString(_appCaptionVisibility, style.visibility.name),
+      _sharedPreferences.setString(_appCaptionPosition, style.position.name),
+      _sharedPreferences.setString(_appCaptionFont, style.font),
+      _sharedPreferences.setDouble(_appCaptionFontSize, style.fontSize),
+      _sharedPreferences.setInt(_appCaptionFontWeight, style.fontWeight),
+      _sharedPreferences.setString(_appCaptionCase, style.letterCase.name),
+      _sharedPreferences.setString(_appCaptionAlignment, style.alignment.name),
+      _sharedPreferences.setString(_appCaptionColor, style.color.name),
+      _sharedPreferences.setString(_appCaptionBackground, style.background.name),
+      _sharedPreferences.setString(_appCaptionTextShadow, style.textShadow.name),
+      _sharedPreferences.setString(_appCaptionBoxShadow, style.boxShadow.name),
+    ]);
+    notifyListeners();
+  }
+
+  Future<void> setAppIconStyle(AppIconStyle style) async {
+    await Future.wait([
+      _sharedPreferences.setString(_appCardImageMode, style.mode.name),
+      _sharedPreferences.setString(_appIconVariant, style.variant.name),
+      _sharedPreferences.setString(_appIconSize, style.size.name),
+      _sharedPreferences.setString(_appIconTint, style.tint.name),
+      _sharedPreferences.setString(_appCardBackground, style.background.name),
+      _sharedPreferences.setString(_appCardBackgroundColor, style.backgroundColorHex),
+      _sharedPreferences.setInt(_appCardGradient, style.gradientIndex),
+      _sharedPreferences.setString(_appCardBackgroundImage, style.backgroundImagePath),
+      _sharedPreferences.setString(_appCardShadow, style.shadow.name),
+    ]);
+    notifyListeners();
   }
 
   Future<void> setShowDateInStatusBar(bool show) async {

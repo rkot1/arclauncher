@@ -44,7 +44,7 @@ class AppsGrid extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    final showAppNames = context.select<SettingsService, bool>((s) => s.showAppNamesBelowIcons);
+    final captionHeight = context.select<SettingsService, double>((s) => s.appCaptionStyle.reservedHeight);
     Widget categoryContent;
     if (applications.isEmpty) {
       categoryContent = categoryContainerEmptyState(context);
@@ -52,8 +52,8 @@ class AppsGrid extends StatelessWidget
     else {
       categoryContent = LayoutBuilder(
         builder: (context, constraints) {
-          final childAspectRatio = showAppNames
-              ? appCardGridAspectRatio(constraints.maxWidth, category.columnsCount)
+          final childAspectRatio = captionHeight > 0
+              ? appCardGridAspectRatio(constraints.maxWidth, category.columnsCount, captionHeight)
               : kAppCardAspectRatio;
           return GridView.custom(
             primary: false,
