@@ -42,6 +42,17 @@ class FLauncherChannel {
     return bytes;
   }
 
+  Future<Map<dynamic, dynamic>?> getApplicationIconVariant(String packageName, String variant) =>
+      _methodChannel.invokeMapMethod("getApplicationIconVariant", {"packageName": packageName, "variant": variant});
+
+  Future<String?> pickFontFile(String directory) =>
+      _methodChannel.invokeMethod<String>("pickFontFile", {"directory": directory});
+
+  Future<void> setNavigationBarMode(String mode) => _methodChannel.invokeMethod("setNavigationBarMode", mode);
+
+  Future<void> setNavigationBarRevealed(bool revealed) =>
+      _methodChannel.invokeMethod("setNavigationBarRevealed", revealed);
+
   Future<bool> applicationExists(String packageName) async =>
       await _methodChannel.invokeMethod('applicationExists', packageName);
 

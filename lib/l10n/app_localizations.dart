@@ -1511,6 +1511,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'10 PM - 6 AM'**
   String get brightnessSlotNight;
+
+  /// No description provided for @appIconsSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App Icons'**
+  String get appIconsSettings;
+
+  /// No description provided for @appCaptionsSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App Captions'**
+  String get appCaptionsSettings;
+
+  /// No description provided for @appCardImageMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Card content'**
+  String get appCardImageMode;
+
+  /// No description provided for @cardModeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Banners'**
+  String get cardModeBanner;
+
+  /// No description provided for @cardModeBannerOrIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Banners, else icon'**
+  String get cardModeBannerOrIcon;
+
+  /// No description provided for @cardModeIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons only'**
+  String get cardModeIcon;
+
+  /// No description provided for @appIconVariant.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get appIconVariant;
+
+  /// No description provided for @iconVariantFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full icon'**
+  String get iconVariantFull;
+
+  /// No description provided for @iconVariantForeground.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreground layer'**
+  String get iconVariantForeground;
+
+  /// No description provided for @iconVariantMonochrome.
+  ///
+  /// In en, this message translates to:
+  /// **'Monochrome'**
+  String get iconVariantMonochrome;
+
+  /// No description provided for @appIconSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon size'**
+  String get appIconSize;
+
+  /// No description provided for @sizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get sizeSmall;
+
+  /// No description provided for @sizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get sizeMedium;
+
+  /// No description provided for @sizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get sizeLarge;
+
+  /// No description provided for @appIconTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon tint'**
+  String get appIconTint;
+
+  /// No description provided for @iconColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon color'**
+  String get iconColor;
+
+  /// No description provided for @appCardBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get appCardBackground;
+
+  /// No description provided for @backgroundSolidColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid color'**
+  String get backgroundSolidColor;
+
+  /// No description provided for @backgroundGradient.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient'**
+  String get backgroundGradient;
+
+  /// No description provided for @backgroundTranslucent.
+  ///
+  /// In en, this message translates to:
+  /// **'Translucent'**
+  String get backgroundTranslucent;
+
+  /// No description provided for @backgroundImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get backgroundImage;
+
+  /// No description provided for @backgroundChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose background image'**
+  String get backgroundChooseImage;
+
+  /// No description provided for @backgroundNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No image selected'**
+  String get backgroundNoImage;
+
+  /// No description provided for @appCardShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Card shadow'**
+  String get appCardShadow;
+
+  /// No description provided for @appIconsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons are pulled from each app package. Foreground layer and Monochrome need adaptive or themed icons; other apps keep their full icon. Custom banners always win.'**
+  String get appIconsHint;
+
+  /// No description provided for @captionVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Show captions'**
+  String get captionVisibility;
+
+  /// No description provided for @captionVisibilityHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get captionVisibilityHidden;
+
+  /// No description provided for @captionVisibilityAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always'**
+  String get captionVisibilityAlways;
+
+  /// No description provided for @captionVisibilityFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'When focused'**
+  String get captionVisibilityFocused;
+
+  /// No description provided for @captionPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Position'**
+  String get captionPosition;
+
+  /// No description provided for @captionPositionBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Below card'**
+  String get captionPositionBelow;
+
+  /// No description provided for @captionPositionOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'On card'**
+  String get captionPositionOverlay;
+
+  /// No description provided for @captionFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get captionFont;
+
+  /// No description provided for @captionFontDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get captionFontDefault;
+
+  /// No description provided for @captionImportFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Import font file'**
+  String get captionImportFont;
+
+  /// No description provided for @captionImportFontHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Or copy .ttf / .otf files to {path}'**
+  String captionImportFontHint(String path);
+
+  /// No description provided for @captionFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get captionFontSize;
+
+  /// No description provided for @captionFontWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get captionFontWeight;
+
+  /// No description provided for @fontWeightLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get fontWeightLight;
+
+  /// No description provided for @fontWeightRegular.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular'**
+  String get fontWeightRegular;
+
+  /// No description provided for @fontWeightMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get fontWeightMedium;
+
+  /// No description provided for @fontWeightSemiBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Semi-bold'**
+  String get fontWeightSemiBold;
+
+  /// No description provided for @fontWeightBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get fontWeightBold;
+
+  /// No description provided for @fontWeightBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get fontWeightBlack;
+
+  /// No description provided for @captionLetterCase.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter case'**
+  String get captionLetterCase;
+
+  /// No description provided for @captionCaseNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get captionCaseNormal;
+
+  /// No description provided for @captionCaseUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'UPPERCASE'**
+  String get captionCaseUppercase;
+
+  /// No description provided for @captionAlignment.
+  ///
+  /// In en, this message translates to:
+  /// **'Alignment'**
+  String get captionAlignment;
+
+  /// No description provided for @captionAlignStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get captionAlignStart;
+
+  /// No description provided for @captionAlignCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get captionAlignCenter;
+
+  /// No description provided for @captionColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get captionColor;
+
+  /// No description provided for @captionColorTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get captionColorTheme;
+
+  /// No description provided for @captionColorMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get captionColorMuted;
+
+  /// No description provided for @captionColorAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent'**
+  String get captionColorAccent;
+
+  /// No description provided for @captionBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get captionBackground;
+
+  /// No description provided for @captionBackgroundPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill'**
+  String get captionBackgroundPill;
+
+  /// No description provided for @captionBackgroundBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get captionBackgroundBar;
+
+  /// No description provided for @captionTextShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Text shadow'**
+  String get captionTextShadow;
+
+  /// No description provided for @captionBoxShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Box shadow'**
+  String get captionBoxShadow;
+
+  /// No description provided for @styleNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get styleNone;
+
+  /// No description provided for @shadowDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get shadowDefault;
+
+  /// No description provided for @shadowSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft'**
+  String get shadowSoft;
+
+  /// No description provided for @shadowStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get shadowStrong;
+
+  /// No description provided for @shadowOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get shadowOutline;
+
+  /// No description provided for @shadowGlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent glow'**
+  String get shadowGlow;
+
+  /// No description provided for @systemNavigationBar.
+  ///
+  /// In en, this message translates to:
+  /// **'System navigation bar'**
+  String get systemNavigationBar;
+
+  /// No description provided for @navigationBarVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Always visible'**
+  String get navigationBarVisible;
+
+  /// No description provided for @navigationBarHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden, swipe up'**
+  String get navigationBarHidden;
+
+  /// No description provided for @navigationBarBottomEdge.
+  ///
+  /// In en, this message translates to:
+  /// **'Show at bottom edge'**
+  String get navigationBarBottomEdge;
 }
 
 class _AppLocalizationsDelegate
