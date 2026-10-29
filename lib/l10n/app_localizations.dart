@@ -204,6 +204,18 @@ abstract class AppLocalizations {
   /// **'Dark dock background'**
   String get dockDarkBackground;
 
+  /// No description provided for @dockBottomGap.
+  ///
+  /// In en, this message translates to:
+  /// **'Space below favorites'**
+  String get dockBottomGap;
+
+  /// No description provided for @dockBottomGapNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get dockBottomGapNone;
+
   /// No description provided for @dockShadow.
   ///
   /// In en, this message translates to:

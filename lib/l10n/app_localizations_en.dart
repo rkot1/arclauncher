@@ -60,6 +60,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dockDarkBackground => 'Dark dock background';
 
   @override
+  String get dockBottomGap => 'Space below favorites';
+
+  @override
+  String get dockBottomGapNone => 'None';
+
+  @override
   String get dockShadow => 'Dock shadow';
 
   @override

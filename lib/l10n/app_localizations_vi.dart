@@ -60,6 +60,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dockDarkBackground => 'Nền tối cho thanh yêu thích';
 
   @override
+  String get dockBottomGap => 'Khoảng trống dưới thanh yêu thích';
+
+  @override
+  String get dockBottomGapNone => 'Không có';
+
+  @override
   String get dockShadow => 'Đổ bóng thanh yêu thích';
 
   @override

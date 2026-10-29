@@ -31,6 +31,7 @@ import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flauncher/providers/watch_next_service.dart';
 import 'package:flauncher/widgets/application_info_panel.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
+import 'package:flauncher/widgets/category_clean_row.dart';
 import 'package:flauncher/widgets/category_row.dart';
 import 'package:flauncher/widgets/settings/settings_panel.dart';
 import 'package:flauncher/widgets/settings/settings_panel_page.dart';
@@ -83,6 +84,23 @@ void main() {
     expect(find.byType(SliverGrid), findsOneWidget);
     expect(findAppCard("me.efesser.flauncher.2"), findsOneWidget);
     expect(findAppCard("me.efesser.flauncher.1"), findsOneWidget);
+  });
+
+  testWidgets("Favorites dock leaves the chosen space below it", (tester) async {
+    final appsService = mkAppService();
+    when(appsService.categoriesWithApps).thenReturn([
+      CategoryWithApps(fakeCategory(name: "Favorites", order: 0), [
+        fakeApp(packageName: "me.efesser.flauncher", name: "FLauncher", version: "1.0.0"),
+      ]),
+    ]);
+    final settingsService = mkSettingsService();
+    when(settingsService.dockBottomGap).thenReturn(48);
+
+    await _pumpWidgetWithProviders(tester, mkWallpaperService(), appsService, settingsService, mkWatchNextService());
+    await tester.pumpAndSettle();
+
+    // The dock row sits above the gap, the dock's outer padding (16) and its inner padding (5).
+    expect(tester.getBottomLeft(find.byType(CategoryCleanRow)).dy, closeTo(720 - 48 - 16 - 5, 1));
   });
 
   testWidgets("Home page shows category empty-state", (tester) async {

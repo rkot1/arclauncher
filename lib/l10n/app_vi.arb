@@ -17,6 +17,8 @@
   "backgroundBlur": "Làm mờ hình nền",
   "dockBlur": "Làm mờ thanh yêu thích",
   "dockDarkBackground": "Nền tối cho thanh yêu thích",
+  "dockBottomGap": "Khoảng trống dưới thanh yêu thích",
+  "dockBottomGapNone": "Không có",
   "dockShadow": "Đổ bóng thanh yêu thích",
   "applications": "Ứng dụng",
   "autoHideAppBar": "Tự động ẩn thanh trạng thái",

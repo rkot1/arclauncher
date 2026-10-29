@@ -16,6 +16,8 @@
     "backgroundBlur": "Background blur",
     "dockBlur": "Dock blur",
     "dockDarkBackground": "Dark dock background",
+    "dockBottomGap": "Space below favorites",
+    "dockBottomGapNone": "None",
     "dockShadow": "Dock shadow",
     "applications": "Applications",
     "autoHideAppBar": "Automatically hide status bar",

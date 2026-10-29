@@ -64,6 +64,10 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
   final GlobalKey<FocusAwareAppBarState> _appBarKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _dockKey = GlobalKey();
+
+  /// Measured height of the dock, once it is laid out.
+  double? _dockHeight;
+
   late final _HeroBackdropBaker _heroBackdropBaker = _HeroBackdropBaker();
 
   /// How far the sections below the dock are scrolled into view, from 0 (dock at the bottom) to 1
@@ -294,11 +298,13 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
     // The dock may have appeared, moved or gone without a scroll.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _measureDock();
         _updateGridReveal();
       }
     });
 
-    final watchNextSpace = watchNextBigPicture ? 385 : 410;
+    final homeContentHeight = reserveWatchNextSpace ? (watchNextBigPicture ? 385 : 410) : _dockHeight ?? 150;
+    final dockBottomGap = context.select<SettingsService, int>((s) => s.dockBottomGap);
 
     return CustomScrollView(
       controller: _scrollController,
@@ -306,11 +312,14 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
         if (favoriteApps.isNotEmpty || showWatchNextSection) ...[
           SliverToBoxAdapter(
             child: SizedBox(
-              height:
-                  MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  kToolbarHeight -
-                  (reserveWatchNextSpace ? watchNextSpace : 150),
+              height: max(
+                0,
+                MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    kToolbarHeight -
+                    homeContentHeight -
+                    (favoriteApps.isNotEmpty ? dockBottomGap : 0),
+              ),
             ),
           ),
           if (showWatchNextSection)
@@ -504,6 +513,15 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  /// Measures the dock, so the space above it leaves exactly the chosen gap below it whatever the card
+  /// and caption sizes.
+  void _measureDock() {
+    final renderObject = _dockKey.currentContext?.findRenderObject();
+    if (renderObject is RenderBox && renderObject.hasSize && renderObject.size.height != _dockHeight) {
+      setState(() => _dockHeight = renderObject.size.height);
+    }
   }
 
   void _updateGridReveal() {
