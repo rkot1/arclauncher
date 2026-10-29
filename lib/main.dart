@@ -18,6 +18,7 @@
 
 import 'dart:async';
 
+import 'package:flauncher/custom_fonts.dart';
 import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
 import 'package:flauncher/providers/apps_service.dart';
@@ -39,13 +40,16 @@ Future<void> main() async {
   initializeDateFormatting();
 
   final sharedPreferences = await SharedPreferences.getInstance();
+  final settingsService = SettingsService(sharedPreferences);
+  // Captions re-layout once a custom font finishes loading, so this need not block startup.
+  unawaited(CustomFonts.ensureLoaded(settingsService.appCaptionStyle.font));
   final fLauncherChannel = FLauncherChannel();
   final fLauncherDatabase = FLauncherDatabase(connect());
 
   runApp(MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (_) => SettingsService(sharedPreferences),
+            create: (_) => settingsService,
             lazy: false),
         ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase)),
         ChangeNotifierProvider(create: (_) => LauncherState()),
