@@ -3,6 +3,7 @@ import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/widgets/rounded_switch_list_tile.dart';
 import 'package:flauncher/widgets/settings/focus_border_thickness_page.dart';
 import 'package:flauncher/widgets/settings/focusable_settings_tile.dart';
+import 'package:flauncher/widgets/settings/settings_choice_tile.dart';
 import 'package:flauncher/widgets/settings/settings_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,6 +50,14 @@ class AppearancePanelPage extends StatelessWidget {
                 title: Text(localizations.dockDarkBackground, style: Theme.of(context).textTheme.bodyMedium),
                 secondary: const Icon(Icons.dark_mode),
               ),
+              SettingsChoiceTile<int>(
+                icon: Icons.vertical_align_bottom,
+                title: localizations.dockBottomGap,
+                values: kDockBottomGaps,
+                value: settingsService.dockBottomGap,
+                labelOf: (gap) => gap == 0 ? localizations.dockBottomGapNone : "$gap dp",
+                onChanged: settingsService.setDockBottomGap,
+              ),
               FocusableSettingsTile(
                 showChevron: true,
                 leading: const Icon(Icons.border_style),
@@ -58,6 +67,18 @@ class AppearancePanelPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 onPressed: () => Navigator.of(context).pushNamed(FocusBorderThicknessPage.routeName),
+              ),
+              SettingsChoiceTile<SystemNavigationBarMode>(
+                icon: Icons.call_to_action_outlined,
+                title: localizations.systemNavigationBar,
+                values: SystemNavigationBarMode.values,
+                value: settingsService.navigationBarMode,
+                labelOf: (mode) => switch (mode) {
+                  SystemNavigationBarMode.visible => localizations.navigationBarVisible,
+                  SystemNavigationBarMode.hidden => localizations.navigationBarHidden,
+                  SystemNavigationBarMode.bottomEdge => localizations.navigationBarBottomEdge,
+                },
+                onChanged: settingsService.setNavigationBarMode,
               ),
             ],
           ),

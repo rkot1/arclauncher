@@ -16,11 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'package:flauncher/app_image_type.dart';
 import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher.dart';
 import 'package:flauncher/flauncher_channel.dart';
 import 'package:flauncher/gradients.dart';
 import 'package:flauncher/l10n/app_localizations.dart';
+import 'package:flauncher/models/app_card_style.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
 import 'package:flauncher/providers/network_service.dart';
@@ -29,6 +31,7 @@ import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flauncher/providers/watch_next_service.dart';
 import 'package:flauncher/widgets/application_info_panel.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
+import 'package:flauncher/widgets/category_clean_row.dart';
 import 'package:flauncher/widgets/category_row.dart';
 import 'package:flauncher/widgets/settings/settings_panel.dart';
 import 'package:flauncher/widgets/settings/settings_panel_page.dart';
@@ -81,6 +84,23 @@ void main() {
     expect(find.byType(SliverGrid), findsOneWidget);
     expect(findAppCard("me.efesser.flauncher.2"), findsOneWidget);
     expect(findAppCard("me.efesser.flauncher.1"), findsOneWidget);
+  });
+
+  testWidgets("Favorites dock leaves the chosen space below it", (tester) async {
+    final appsService = mkAppService();
+    when(appsService.categoriesWithApps).thenReturn([
+      CategoryWithApps(fakeCategory(name: "Favorites", order: 0), [
+        fakeApp(packageName: "me.efesser.flauncher", name: "FLauncher", version: "1.0.0"),
+      ]),
+    ]);
+    final settingsService = mkSettingsService();
+    when(settingsService.dockBottomGap).thenReturn(48);
+
+    await _pumpWidgetWithProviders(tester, mkWallpaperService(), appsService, settingsService, mkWatchNextService());
+    await tester.pumpAndSettle();
+
+    // The dock row sits above the gap, the dock's outer padding (16) and its inner padding (5).
+    expect(tester.getBottomLeft(find.byType(CategoryCleanRow)).dy, closeTo(720 - 48 - 16 - 5, 1));
   });
 
   testWidgets("Home page shows category empty-state", (tester) async {
@@ -472,6 +492,8 @@ SettingsService mkSettingsService() {
   when(settingsService.timeFormat).thenReturn(SettingsService.defaultTimeFormat);
   when(settingsService.appHighlightAnimationEnabled).thenReturn(true);
   when(settingsService.showAppNamesBelowIcons).thenReturn(true);
+  when(settingsService.appCaptionStyle).thenReturn(const AppCaptionStyle(visibility: AppCaptionVisibility.always));
+  when(settingsService.appIconStyle).thenReturn(const AppIconStyle());
   when(settingsService.backgroundBlurDisabled).thenReturn(false);
   when(settingsService.showWatchNextSection).thenReturn(false);
   when(settingsService.watchNextBigPictureMode).thenReturn(false);
@@ -520,14 +542,17 @@ AppsService mkAppService() {
   final appsService = MockAppsService();
   when(appsService.initialized).thenReturn(true);
   when(appsService.layoutVersion).thenReturn(0);
-  when(appsService.getAppIcon(any)).thenAnswer((_) => Future.value(Uint8List.fromList([
+  final iconPng = Uint8List.fromList([
     0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
     0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
     0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00,
     0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
     0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
     0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
-  ])));
+  ]);
+  when(appsService.getAppIcon(any)).thenAnswer((_) => Future.value(iconPng));
+  when(appsService.getAppCardImage(any, any))
+      .thenAnswer((_) => Future.value(AppCardImage(type: AppImageType.Icon, bytes: iconPng)));
   when(appsService.getAppBanner(any)).thenAnswer((_) => Future.value(null));
   when(appsService.hasCustomBanner(any)).thenAnswer((_) => Future.value(false));
   when(appsService.isAppInFavorites(any)).thenReturn(false);

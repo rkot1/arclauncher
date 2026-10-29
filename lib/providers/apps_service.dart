@@ -23,8 +23,10 @@ import 'package:collection/collection.dart' as collection;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:drift/drift.dart';
+import 'package:flauncher/app_image_type.dart';
 import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
+import 'package:flauncher/models/app_card_style.dart';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/widgets.dart';
 
@@ -43,6 +45,7 @@ class AppsService extends ChangeNotifier
   Map<String, App> _applications = Map();
   Map<String, Uint8List> _iconCache = Map();
   Map<String, Uint8List> _bannerCache = Map();
+  final Map<String, AppIconImage> _iconVariantCache = {};
 
   Map<int, Category> _categoriesById = Map();
 
@@ -109,6 +112,7 @@ class AppsService extends ChangeNotifier
       if (changedPackageName != null) {
         _iconCache.remove(changedPackageName);
         _bannerCache.remove(changedPackageName);
+        _evictIconVariants(changedPackageName);
         _dirtyImagePackages.add(changedPackageName);
       }
 
@@ -172,6 +176,7 @@ class AppsService extends ChangeNotifier
             }
             _iconCache.remove(newApp.packageName);
             _bannerCache.remove(newApp.packageName);
+            _evictIconVariants(newApp.packageName);
           }
           break;
         case "PACKAGE_REMOVED":
@@ -181,6 +186,7 @@ class AppsService extends ChangeNotifier
           // Clear icon cache for removed app
           _iconCache.remove(packageName);
           _bannerCache.remove(packageName);
+          _evictIconVariants(packageName);
 
           App? application = _applications.remove(packageName);
 
@@ -447,6 +453,59 @@ class AppsService extends ChangeNotifier
       _iconCache[packageName] = bytes;
     }
     return bytes;
+  }
+
+  /// Renders the [variant] of the app icon, falling back to the regular icon
+  /// when the platform cannot render it.
+  Future<AppIconImage> getAppIconVariant(String packageName, AppIconVariant variant) async {
+    final key = '$packageName|${variant.name}';
+    final cached = _iconVariantCache[key];
+    if (cached != null) {
+      return cached;
+    }
+
+    AppIconImage? icon;
+    try {
+      final result = await _fLauncherChannel.getApplicationIconVariant(packageName, variant.name);
+      final Uint8List? bytes = result?['bytes'];
+      if (bytes != null && bytes.isNotEmpty) {
+        final int? color = result?['color'];
+        icon = AppIconImage(
+          bytes: bytes,
+          variant: AppIconVariant.values.asNameMap()[result?['variant']] ?? AppIconVariant.full,
+          dominantColor: color != null ? Color(color) : null,
+        );
+      }
+    } catch (_) {
+      // Older platform side or rendering failure: use the plain icon below.
+    }
+
+    icon ??= AppIconImage(bytes: await getAppIcon(packageName), variant: AppIconVariant.full);
+    if (icon.bytes.isNotEmpty) {
+      _iconVariantCache[key] = icon;
+    }
+    return icon;
+  }
+
+  void _evictIconVariants(String packageName) {
+    _iconVariantCache.removeWhere((key, _) => key.startsWith('$packageName|'));
+  }
+
+  /// Resolves what the card of [packageName] shows for the given icon [style].
+  Future<AppCardImage> getAppCardImage(String packageName, AppIconStyle style) async {
+    if (style.mode != AppCardImageMode.icon || await hasCustomBanner(packageName)) {
+      final banner = await getAppBanner(packageName);
+      if (banner.isNotEmpty) {
+        return AppCardImage(type: AppImageType.Banner, bytes: banner);
+      }
+    }
+
+    if (style.mode == AppCardImageMode.banner) {
+      return AppCardImage(type: AppImageType.Icon, bytes: await getAppIcon(packageName));
+    }
+
+    final icon = await getAppIconVariant(packageName, style.variant);
+    return AppCardImage(type: AppImageType.Icon, bytes: icon.bytes, icon: icon);
   }
 
   Future<void> launchApp(App app) async {
@@ -993,4 +1052,155 @@ class AppsService extends ChangeNotifier
       notifyListeners();
     }
   }
+
+  /// The sections, in order, with their apps by package name, and the hidden apps, as a backup stores them.
+  Future<Map<String, Object?>> exportLayout() async {
+    final (categories, spacers, appsCategories, applications) = await (
+      _database.getCategories(),
+      _database.getLauncherSpacers(),
+      _database.getAppsCategories(),
+      _database.getApplications(),
+    ).wait;
+
+    final sections = <LauncherSection>[...categories, ...spacers]..sort((a, b) => a.order.compareTo(b.order));
+    final appsByCategory = <int, List<AppCategory>>{};
+    for (final appCategory in appsCategories) {
+      appsByCategory.putIfAbsent(appCategory.categoryId, () => []).add(appCategory);
+    }
+
+    return {
+      "sections": [
+        for (final section in sections)
+          if (section is Category)
+            {
+              "kind": "category",
+              "name": section.name,
+              "type": section.type.name,
+              "sort": section.sort.name,
+              "rowHeight": section.rowHeight,
+              "columnsCount": section.columnsCount,
+              "apps": [
+                for (final appCategory in (appsByCategory[section.id] ?? [])..sort((a, b) => a.order.compareTo(b.order)))
+                  appCategory.appPackageName,
+              ],
+            }
+          else if (section is LauncherSpacer)
+            {"kind": "spacer", "height": section.height},
+      ],
+      "hiddenApps": [
+        for (final application in applications)
+          if (application.hidden) application.packageName,
+      ]..sort(),
+    };
+  }
+
+  /// Replaces every section with those of [layout], as [exportLayout] writes it.
+  ///
+  /// Apps that are not installed are skipped. Installed apps the layout does not mention go to "All Apps",
+  /// so nothing disappears from the launcher. Throws a [FormatException] before changing anything when
+  /// [layout] is malformed.
+  Future<({int skippedApps, int addedApps})> restoreLayout(Map<String, dynamic> layout) async {
+    final sections = layout["sections"];
+    if (sections is! List) {
+      throw const FormatException("layout.sections must be a list");
+    }
+    final parsedSections = sections.map(_parseLayoutSection).toList();
+    final hiddenApps = _parsePackageNames(layout["hiddenApps"], "layout.hiddenApps");
+
+    final installed = {for (final app in await _database.getApplications()) app.packageName: app};
+    final mentioned = {
+      ...hiddenApps,
+      for (final section in parsedSections)
+        if (section case (apps: final List<String> apps, category: _)) ...apps,
+    };
+    int addedApps = 0;
+
+    await _database.transaction(() async {
+      await _database.clearLayout();
+
+      final categoryIds = <String, int>{};
+      final categorySizes = <int, int>{};
+      for (final (order, section) in parsedSections.indexed) {
+        switch (section) {
+          case (height: final int height):
+            await _database.insertSpacer(LauncherSpacersCompanion.insert(height: height, order: order));
+          case (apps: final List<String> apps, category: final Category category):
+            final id = await _database.insertCategory(CategoriesCompanion.insert(
+              name: category.name,
+              sort: Value(category.sort),
+              type: Value(category.type),
+              rowHeight: Value(category.rowHeight),
+              columnsCount: Value(category.columnsCount),
+              order: order,
+            ));
+            final installedApps = apps.where(installed.containsKey).toSet();
+            await _database.insertAppsCategories([
+              for (final (appOrder, packageName) in installedApps.indexed)
+                AppsCategoriesCompanion.insert(categoryId: id, appPackageName: packageName, order: appOrder),
+            ]);
+            categoryIds.putIfAbsent(category.name.toLowerCase(), () => id);
+            categorySizes[id] = installedApps.length;
+        }
+      }
+
+      final unlisted = installed.values.where((app) => !mentioned.contains(app.packageName)).toList()
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      final targetId = categoryIds["all apps"] ??
+          categoryIds.entries.where((entry) => entry.key != "favorites").firstOrNull?.value ??
+          categoryIds.values.firstOrNull;
+      if (targetId != null && unlisted.isNotEmpty) {
+        final start = categorySizes[targetId]!;
+        await _database.insertAppsCategories([
+          for (final (index, app) in unlisted.indexed)
+            AppsCategoriesCompanion.insert(categoryId: targetId, appPackageName: app.packageName, order: start + index),
+        ]);
+        addedApps = unlisted.length;
+      }
+
+      for (final packageName in mentioned.where(installed.containsKey)) {
+        final hidden = hiddenApps.contains(packageName);
+        if (installed[packageName]!.hidden != hidden) {
+          await _database.updateApp(packageName, AppsCompanion(hidden: Value(hidden)));
+        }
+      }
+    });
+
+    await _refreshState();
+    return (skippedApps: mentioned.where((packageName) => !installed.containsKey(packageName)).length, addedApps: addedApps);
+  }
+
+  /// A spacer as `(height:)`, or a category with its apps as `(apps:, category:)`.
+  static Record _parseLayoutSection(Object? section) {
+    if (section is Map && section["kind"] == "spacer") {
+      return (height: _layoutInt(section["height"], fallback: 10, min: 0, max: 500));
+    }
+    if (section is Map && section["kind"] == "category" && section["name"] is String) {
+      // Snapped to what the section editor offers.
+      final rowHeight = _layoutInt(section["rowHeight"], fallback: Category.RowHeight, min: 80, max: 150);
+      return (
+        apps: _parsePackageNames(section["apps"], "apps of ${section["name"]}").toList(),
+        category: Category(
+          name: section["name"],
+          type: CategoryType.values.asNameMap()[section["type"]] ?? Category.Type,
+          sort: CategorySort.values.asNameMap()[section["sort"]] ?? Category.Sort,
+          rowHeight: (rowHeight / 10).round() * 10,
+          columnsCount: _layoutInt(section["columnsCount"], fallback: Category.ColumnsCount, min: 5, max: 10),
+        ),
+      );
+    }
+    throw FormatException("Unknown layout section: $section");
+  }
+
+  static Set<String> _parsePackageNames(Object? value, String name) {
+    if (value == null) {
+      return {};
+    }
+    if (value is! List || value.any((item) => item is! String)) {
+      throw FormatException("$name must be a list of package names");
+    }
+    return {...value.cast<String>()};
+  }
+
+  static int _layoutInt(Object? value, {required int fallback, required int min, required int max}) =>
+      value is num ? value.round().clamp(min, max) : fallback;
 }
