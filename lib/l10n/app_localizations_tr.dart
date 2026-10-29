@@ -826,6 +826,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backgroundGradient => 'Gradient';
 
   @override
+  String get backgroundWallpaperColors => 'Wallpaper colors';
+
+  @override
   String get backgroundTranslucent => 'Translucent';
 
   @override

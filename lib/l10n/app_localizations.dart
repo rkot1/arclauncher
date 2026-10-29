@@ -1626,6 +1626,12 @@ abstract class AppLocalizations {
   /// **'Gradient'**
   String get backgroundGradient;
 
+  /// No description provided for @backgroundWallpaperColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper colors'**
+  String get backgroundWallpaperColors;
+
   /// No description provided for @backgroundTranslucent.
   ///
   /// In en, this message translates to:

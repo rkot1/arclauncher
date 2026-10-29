@@ -345,6 +345,7 @@
     "appCardBackground": "Background",
     "backgroundSolidColor": "Solid color",
     "backgroundGradient": "Gradient",
+    "backgroundWallpaperColors": "Wallpaper colors",
     "backgroundTranslucent": "Translucent",
     "backgroundImage": "Image",
     "backgroundChooseImage": "Choose background image",

@@ -254,6 +254,7 @@
   "appCardBackground": "Nền",
   "backgroundSolidColor": "Màu đơn",
   "backgroundGradient": "Màu chuyển sắc",
+  "backgroundWallpaperColors": "Màu hình nền",
   "backgroundTranslucent": "Trong mờ",
   "backgroundImage": "Hình ảnh",
   "backgroundChooseImage": "Chọn ảnh nền",

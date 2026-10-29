@@ -831,6 +831,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backgroundGradient => 'Màu chuyển sắc';
 
   @override
+  String get backgroundWallpaperColors => 'Màu hình nền';
+
+  @override
   String get backgroundTranslucent => 'Trong mờ';
 
   @override

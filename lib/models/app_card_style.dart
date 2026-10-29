@@ -247,7 +247,16 @@ enum AppIconSize {
 
 enum AppIconTint { white, accent, iconColor }
 
-enum AppCardBackground { iconColor, color, gradient, glass, image }
+enum AppCardBackground {
+  iconColor,
+
+  /// Colours picked from the wallpaper on screen, changing with it.
+  wallpaper,
+  color,
+  gradient,
+  glass,
+  image,
+}
 
 enum AppCardShadow { none, normal, strong, glow }
 
