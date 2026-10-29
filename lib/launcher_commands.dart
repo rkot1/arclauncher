@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flauncher/models/setting_spec.dart';
 import 'package:flauncher/providers/backup_service.dart';
+import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -11,9 +12,13 @@ import 'package:package_info_plus/package_info_plus.dart';
 class LauncherCommands {
   static const _channel = MethodChannel('me.efesser.flauncher/commands');
 
-  final BackupService _backupService;
+  /// How long next-photo waits for the photo, safely within the time Android gives a broadcast.
+  static const _nextPhotoWait = Duration(seconds: 8);
 
-  LauncherCommands(this._backupService);
+  final BackupService _backupService;
+  final WallpaperService _wallpaperService;
+
+  LauncherCommands(this._backupService, this._wallpaperService);
 
   void attach() => _channel.setMethodCallHandler(_onMethodCall);
 
@@ -75,9 +80,23 @@ class LauncherCommands {
         return summary.toString();
       case "dump":
         return _backupService.encodeBackup();
+      case "next-photo":
+        return _nextPhoto();
       default:
         throw FormatException("Unknown command $command, run help for the list");
     }
+  }
+
+  Future<String> _nextPhoto() async {
+    final shown = await _wallpaperService
+        .nextSlideshowPhoto()
+        .then<bool?>((shown) => shown)
+        .timeout(_nextPhotoWait, onTimeout: () => null);
+    return switch (shown) {
+      true => "showing a photo by ${_wallpaperService.slideshowAuthor ?? "an unknown author"}",
+      false => throw StateError("could not load a photo: check the access key and the connection, or try again later"),
+      null => "still loading, the photo shows when it arrives",
+    };
   }
 
   SettingSpec _spec(String key) =>
@@ -126,6 +145,7 @@ Commands:
   export [--es path <file>]        save a backup (default: ${(await _backupService.directory()).path})
   import --es path <file>          restore a backup, or --es json '<backup>'
   dump                             print a backup
+  next-photo                       show the next Unsplash slideshow photo now
 
 Settings:
 $specs''';

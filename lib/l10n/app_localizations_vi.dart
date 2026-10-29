@@ -347,6 +347,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get unsplashInterval => 'Đổi ảnh sau mỗi';
 
   @override
+  String get unsplashNextPhoto => 'Ảnh tiếp theo ngay';
+
+  @override
+  String get unsplashNextPhotoLoading => 'Đang tải ảnh tiếp theo…';
+
+  @override
+  String get unsplashNextPhotoShown => 'Đã đổi ảnh trên màn hình chính';
+
+  @override
+  String get unsplashNextPhotoFailed =>
+      'Không thể tải ảnh. Hãy kiểm tra mã truy cập và kết nối mạng, hoặc thử lại sau.';
+
+  @override
   String unsplashIntervalMinutes(int minutes) {
     return '$minutes phút';
   }

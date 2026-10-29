@@ -22,8 +22,11 @@ import 'dart:typed_data';
 import 'package:flauncher/gradients.dart';
 import 'package:flauncher/models/wallpaper_palette.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -193,6 +196,78 @@ void main() {
       await wallpaperService.pickVideoWallpaper(video);
 
       verify(settingsService.setRedditWallpaperEnabled(false)).called(1);
+    });
+  });
+
+  group("unsplash slideshow", () {
+    late List<String> photoRequests;
+
+    MockClient unsplash() {
+      photoRequests = [];
+      return MockClient((request) async {
+        if (request.url.path == "/photos/random") {
+          final id = "p${photoRequests.length + 1}";
+          photoRequests.add(id);
+          // Slow enough for a second request to arrive while this one is under way.
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          return http.Response(
+            '{"id":"$id","urls":{"raw":"https://img.test/$id?a=1"},"user":{"name":"Author $id"},'
+            '"links":{"download_location":"https://api.unsplash.com/photos/$id/download"}}',
+            200,
+          );
+        }
+        if (request.url.host == "img.test") return http.Response.bytes([9, 9, 9], 200);
+        return http.Response("{}", 200);
+      });
+    }
+
+    setUp(() {
+      addTearDown(() async {
+        final slideshow = Directory("./slideshow");
+        if (await slideshow.exists()) await slideshow.delete(recursive: true);
+      });
+    });
+
+    test("next photo shows a new photo, joining a fetch already under way", () async {
+      final settingsService = _createSettingsService(unsplashSlideshowEnabled: true);
+      when(settingsService.unsplashAccessKey).thenReturn("k");
+      final wallpaperService = WallpaperService(settingsService, unsplashClient: unsplash());
+      addTearDown(wallpaperService.dispose);
+      await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
+      for (var i = 0; i < 100 && wallpaperService.wallpaper == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      expect(photoRequests, ["p1"], reason: "the slideshow starts with a photo");
+
+      final shown = await Future.wait([wallpaperService.nextSlideshowPhoto(), wallpaperService.nextSlideshowPhoto()]);
+
+      expect(shown, [true, true]);
+      expect(photoRequests, ["p1", "p2"]);
+      expect((wallpaperService.wallpaper! as FileImage).file.path, endsWith("p2.jpg"));
+      verify(settingsService.setUnsplashAuthor("Author p2"));
+    });
+
+    test("next photo answers false when the photo cannot be fetched", () async {
+      final settingsService = _createSettingsService(unsplashSlideshowEnabled: true);
+      when(settingsService.unsplashAccessKey).thenReturn("k");
+      final wallpaperService = WallpaperService(
+        settingsService,
+        unsplashClient: MockClient((_) async => http.Response("rate limited", 403)),
+      );
+      addTearDown(wallpaperService.dispose);
+      await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(await wallpaperService.nextSlideshowPhoto(), isFalse);
+      expect(wallpaperService.wallpaper, isNull);
+    });
+
+    test("next photo is refused while the slideshow is off", () async {
+      final wallpaperService = WallpaperService(_createSettingsService());
+      addTearDown(wallpaperService.dispose);
+      await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
+
+      await expectLater(wallpaperService.nextSlideshowPhoto(), throwsStateError);
     });
   });
 }

@@ -43,7 +43,7 @@ Once you're in the group, you can enrol in the beta either way:
 
 ### Wallpapers & Screensavers
 - **Video Wallpapers** - Set animated video files (MP4/WebM) as the home screen background.
-- **Slideshows** - Rotate wallpapers from custom subreddits or Unsplash categories with configurable intervals.
+- **Slideshows** - Rotate wallpapers from custom subreddits or Unsplash categories with configurable intervals, or change to the next one on demand from settings (and, for Unsplash, over adb).
 - **OLED Protection** - Pitch-black theme option and screensaver with position-shifting clock to prevent burn-in.
 - **Dynamic Wallpapers** - Automatically switch wallpapers or enable dark mode based on the time of day.
 
@@ -226,6 +226,7 @@ The answer is printed as `Broadcast completed: result=0, data="…"`. `result=1`
 | `export` | `[--es path <file>]` | Saves a backup, by default in the backups folder, and prints its path |
 | `import` | `--es path <file>`, or `--es json '<backup>'` | Restores a backup |
 | `dump` | | Prints a backup |
+| `next-photo` | | Shows the next Unsplash slideshow photo now and starts its interval over |
 
 [`tool/arc-adb`](tool/arc-adb) runs these commands for you and handles the quoting. Its `pull` saves a backup and copies it to your computer, and `push` copies one to the device and restores it:
 

@@ -161,6 +161,10 @@
     "unsplashAccessKeyHelp": "Create a free app at unsplash.com/developers and paste its Access Key.",
     "unsplashNotSet": "Not set",
     "unsplashInterval": "Change every",
+    "unsplashNextPhoto": "Next photo now",
+    "unsplashNextPhotoLoading": "Loading the next photo…",
+    "unsplashNextPhotoShown": "New photo on the home screen",
+    "unsplashNextPhotoFailed": "Couldn't load a photo. Check the access key and the connection, or try again later.",
     "unsplashIntervalMinutes": "{minutes} min",
     "@unsplashIntervalMinutes": {
         "placeholders": {

@@ -2,6 +2,7 @@
 # Sends Arc Launcher's adb commands and prints the reply (see "Backup, restore and tuning over ADB" in the README).
 #
 #   tool/arc-adb help | list | dump | folder
+#   tool/arc-adb next-photo                show the next Unsplash slideshow photo now
 #   tool/arc-adb get <key>
 #   tool/arc-adb set <key> <value>
 #   tool/arc-adb set '<JSON object of settings>'
@@ -48,7 +49,7 @@ send() {
 command="${1:-help}"
 shift || true
 case "$command" in
-  help | list | dump | folder)
+  help | list | dump | folder | next-photo)
     send cmd "$command"
     ;;
   get | reset)

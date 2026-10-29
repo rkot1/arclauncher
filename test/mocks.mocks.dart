@@ -894,6 +894,16 @@ class MockWallpaperService extends _i1.Mock implements _i15.WallpaperService {
       );
 
   @override
+  _i10.Future<bool> nextSlideshowPhoto() => (super.noSuchMethod(
+        Invocation.method(
+          #nextSlideshowPhoto,
+          [],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
   _i10.Future<void> advanceRedditWallpaper() => (super.noSuchMethod(
         Invocation.method(
           #advanceRedditWallpaper,

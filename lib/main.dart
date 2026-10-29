@@ -83,7 +83,10 @@ Future<void> main() async {
             lazy: false
         ),
         Provider(
-            create: (context) => LauncherCommands(Provider.of(context, listen: false))..attach(),
+            create: (context) => LauncherCommands(
+                  Provider.of(context, listen: false),
+                  Provider.of(context, listen: false),
+                )..attach(),
             dispose: (_, LauncherCommands commands) => commands.detach(),
             lazy: false
         ),

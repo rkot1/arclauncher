@@ -18,6 +18,7 @@
 
 import 'package:flauncher/l10n/app_localizations.dart';
 import 'package:flauncher/providers/settings_service.dart';
+import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flauncher/widgets/rounded_switch_list_tile.dart';
 import 'package:flauncher/widgets/settings/focusable_settings_tile.dart';
 import 'package:flauncher/widgets/settings/slideshow_sources_panel_page.dart';
@@ -51,6 +52,12 @@ class UnsplashSlideshowPanelPage extends StatelessWidget {
               // Without a key the switch asks for one instead of enabling a slideshow that cannot run.
               onChanged: (value) => hasKey ? settings.setUnsplashSlideshowEnabled(value) : editKey(),
             ),
+            if (settings.unsplashSlideshowEnabled)
+              FocusableSettingsTile(
+                leading: const Icon(Icons.skip_next),
+                title: Text(localizations.unsplashNextPhoto),
+                onPressed: () => _showNextPhoto(context, localizations),
+              ),
             FocusableSettingsTile(
               leading: const Icon(Icons.key),
               title: Text(localizations.unsplashAccessKey),
@@ -74,6 +81,43 @@ class UnsplashSlideshowPanelPage extends StatelessWidget {
     );
   }
 
+  Future<void> _showNextPhoto(BuildContext context, AppLocalizations localizations) async {
+    final wallpaperService = context.read<WallpaperService>();
+    // Snack bars are light on the dark theme, so the spinner takes their text colour.
+    final spinnerColor = Theme.of(context).colorScheme.onInverseSurface;
+    final messenger = ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: spinnerColor),
+              ),
+              const SizedBox(width: 12),
+              Text(localizations.unsplashNextPhotoLoading),
+            ],
+          ),
+          duration: const Duration(seconds: 30),
+        ),
+      );
+    bool shown;
+    try {
+      shown = await wallpaperService.nextSlideshowPhoto();
+    } on StateError {
+      shown = false;
+    }
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(shown ? localizations.unsplashNextPhotoShown : localizations.unsplashNextPhotoFailed),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+  }
 
   static String _tail(String key) => key.length <= 4 ? "" : key.substring(key.length - 4);
 
