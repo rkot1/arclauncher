@@ -63,6 +63,8 @@ class LauncherCommands {
         final spec = _spec(argument("key"));
         await _backupService.applySettings({spec.key: null});
         return "ok";
+      case "folder":
+        return (await _backupService.directory()).path;
       case "export":
         return (await _backupService.export(path: arguments["path"])).path;
       case "import":
@@ -120,6 +122,7 @@ Commands:
   set --es key <key> --es value <value>
   set --es json '{"<key>": <value>, ...}'
   reset --es key <key>             back to the default
+  folder                           the backups folder, created if missing
   export [--es path <file>]        save a backup (default: ${(await _backupService.directory()).path})
   import --es path <file>          restore a backup, or --es json '<backup>'
   dump                             print a backup

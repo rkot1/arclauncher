@@ -222,6 +222,7 @@ The answer is printed as `Broadcast completed: result=0, data="…"`. `result=1`
 | `get` | `--es key <key>` | Prints one setting |
 | `set` | `--es key <key> --es value <value>`, or `--es json '<object>'` | Changes settings |
 | `reset` | `--es key <key>` | Puts a setting back to its default |
+| `folder` | | Prints the backups folder, creating it if it is missing |
 | `export` | `[--es path <file>]` | Saves a backup, by default in the backups folder, and prints its path |
 | `import` | `--es path <file>`, or `--es json '<backup>'` | Restores a backup |
 | `dump` | | Prints a backup |

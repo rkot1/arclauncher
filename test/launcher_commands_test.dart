@@ -113,6 +113,16 @@ void main() {
     expect(missingOutput, startsWith("error:"));
   });
 
+  test("folder prints the backups folder and creates it", () async {
+    directory.deleteSync(recursive: true);
+
+    final (ok, output) = await commands.run({"cmd": "folder"});
+
+    expect(ok, isTrue);
+    expect(output, directory.path);
+    expect(directory.existsSync(), isTrue);
+  });
+
   test("help lists commands and settings, unknown commands fail", () async {
     final (ok, help) = await commands.run({"cmd": "help"});
     expect(ok, isTrue);

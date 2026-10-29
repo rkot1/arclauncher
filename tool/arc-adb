@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sends Arc Launcher's adb commands and prints the reply (see "Backup, restore and tuning over ADB" in the README).
 #
-#   tool/arc-adb help | list | dump
+#   tool/arc-adb help | list | dump | folder
 #   tool/arc-adb get <key>
 #   tool/arc-adb set <key> <value>
 #   tool/arc-adb set '<JSON object of settings>'
@@ -48,7 +48,7 @@ send() {
 command="${1:-help}"
 shift || true
 case "$command" in
-  help | list | dump)
+  help | list | dump | folder)
     send cmd "$command"
     ;;
   get | reset)
@@ -73,7 +73,9 @@ case "$command" in
     ;;
   push)
     file="${1:?usage: arc-adb push <local file>}"
-    remote="/sdcard/Android/data/$package/files/backups/$(basename "$file")"
+    # The launcher creates its backups folder on request; adb is not allowed to on a fresh install.
+    folder="$(send cmd folder)"
+    remote="$folder/$(basename "$file")"
     "${adb[@]}" push "$file" "$remote" > /dev/null
     send cmd import path "$remote"
     ;;
