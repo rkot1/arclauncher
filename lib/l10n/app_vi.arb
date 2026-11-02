@@ -328,5 +328,17 @@
   "backupRestoreFailed": "Không thể khôi phục: {error}",
   "backupExportFailed": "Không thể lưu: {error}",
   "backupFolderHint": "Thư mục sao lưu: {path}",
-  "backupAdbHint": "Chỉnh cài đặt từ máy tính: adb shell am broadcast -a {package}.COMMAND --es cmd help"
+  "backupAdbHint": "Chỉnh cài đặt từ máy tính: adb shell am broadcast -a {package}.COMMAND --es cmd help",
+  "displayResolution": "Độ phân giải",
+  "displayResolutionNative": "Gốc",
+  "displayResolutionCustom": "Tùy chỉnh",
+  "displayResolutionDetails": "{width} × {height}, mật độ {density}",
+  "displayResolutionHint": "Độ phân giải thấp hơn giúp mọi thứ mượt hơn trên màn hình 4K, chữ và biểu tượng vẫn giữ nguyên kích thước. Thay đổi áp dụng cho toàn hệ thống và vẫn giữ sau khi khởi động lại. Các ứng dụng vẽ trực tiếp lên màn hình, như một số ứng dụng bảng trắng có sẵn, khi đó có thể hiển thị nét bút sai vị trí.",
+  "displayResolutionPermissionHint": "Để thay đổi, hãy cấp quyền cho Arc Launcher một lần từ máy tính: {command}",
+  "displayResolutionKeepTitle": "Giữ độ phân giải này?",
+  "displayResolutionKeepBody": "{seconds, plural, other{Sẽ quay lại độ phân giải trước sau {seconds} giây.}}",
+  "displayResolutionKeep": "Giữ",
+  "displayResolutionRevert": "Hoàn tác",
+  "displayResolutionUnavailable": "Arc Launcher không thể thay đổi độ phân giải trên thiết bị này. Bản phát hành trên GitHub có thể làm được trên hầu hết các thiết bị.",
+  "displayResolutionFailed": "Không thể thay đổi độ phân giải: {error}"
 }

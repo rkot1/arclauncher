@@ -6,6 +6,7 @@
 #   tool/arc-adb set <key> <value>
 #   tool/arc-adb set '<JSON object of settings>'
 #   tool/arc-adb reset <key>
+#   tool/arc-adb resolution [native|1440p|1080p]   print the display resolution, or change it
 #   tool/arc-adb export [<device path>]    save a backup on the device
 #   tool/arc-adb import <device path>      restore a backup already on the device
 #   tool/arc-adb pull [<local file>]       save a backup and copy it here
@@ -60,6 +61,9 @@ case "$command" in
     else
       send cmd set key "${1:?usage: arc-adb set <key> <value>}" value "${2?usage: arc-adb set <key> <value>}"
     fi
+    ;;
+  resolution)
+    if (($#)); then send cmd resolution value "$1"; else send cmd resolution; fi
     ;;
   export)
     if (($#)); then send cmd export path "$1"; else send cmd export; fi

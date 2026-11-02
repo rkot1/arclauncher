@@ -2075,6 +2075,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tune settings from a computer: adb shell am broadcast -a {package}.COMMAND --es cmd help'**
   String backupAdbHint(String package);
+
+  /// No description provided for @displayResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get displayResolution;
+
+  /// No description provided for @displayResolutionNative.
+  ///
+  /// In en, this message translates to:
+  /// **'Native'**
+  String get displayResolutionNative;
+
+  /// No description provided for @displayResolutionCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get displayResolutionCustom;
+
+  /// No description provided for @displayResolutionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'{width} × {height}, density {density}'**
+  String displayResolutionDetails(int width, int height, int density);
+
+  /// No description provided for @displayResolutionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A lower resolution makes everything smoother on a 4K panel, and text and icons keep their size. It changes the whole system and stays after a restart. Apps that draw straight onto the panel, such as some built-in whiteboards, may then show pen strokes in the wrong place.'**
+  String get displayResolutionHint;
+
+  /// No description provided for @displayResolutionPermissionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To change it, allow Arc Launcher once from a computer: {command}'**
+  String displayResolutionPermissionHint(String command);
+
+  /// No description provided for @displayResolutionKeepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this resolution?'**
+  String get displayResolutionKeepTitle;
+
+  /// No description provided for @displayResolutionKeepBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{Going back to the previous resolution in 1 second.} other{Going back to the previous resolution in {seconds} seconds.}}'**
+  String displayResolutionKeepBody(int seconds);
+
+  /// No description provided for @displayResolutionKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get displayResolutionKeep;
+
+  /// No description provided for @displayResolutionRevert.
+  ///
+  /// In en, this message translates to:
+  /// **'Revert'**
+  String get displayResolutionRevert;
+
+  /// No description provided for @displayResolutionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Arc Launcher can\'t change the resolution on this device. The GitHub release can on most devices.'**
+  String get displayResolutionUnavailable;
+
+  /// No description provided for @displayResolutionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the resolution: {error}'**
+  String displayResolutionFailed(String error);
 }
 
 class _AppLocalizationsDelegate

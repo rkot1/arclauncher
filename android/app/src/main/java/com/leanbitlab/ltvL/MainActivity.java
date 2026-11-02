@@ -43,6 +43,8 @@ import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Pair;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
 import android.media.tv.TvContract;
 import android.database.Cursor;
@@ -78,6 +80,7 @@ import io.flutter.plugin.platform.PlatformPlugin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,8 +107,13 @@ public class MainActivity extends FlutterActivity {
     private static final int MAX_BACKUP_SIZE = 8 * 1024 * 1024;
     // App card icons are drawn up to ~200 physical pixels tall on 1080p TVs.
     private static final int ICON_VARIANT_RENDER_SIZE = 256;
+    // UserHandle.PER_USER_RANGE: an app's uid divided by it is its user id. The density is set for that user,
+    // since naming the current user (-2, as `wm density` does) needs INTERACT_ACROSS_USERS_FULL.
+    private static final int PER_USER_RANGE = 100000;
 
     private final ExecutorService iconExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService displayExecutor = Executors.newSingleThreadExecutor();
+    private Boolean displayResolutionAvailable;
     private MethodChannel.Result pendingFontPickResult;
     private String pendingFontPickDirectory;
     private MethodChannel.Result pendingOpenBackupResult;
@@ -206,6 +214,9 @@ public class MainActivity extends FlutterActivity {
                     int brightness = call.argument("brightness");
                     result.success(setSystemBrightness(brightness));
                 }
+                case "getDisplayResolution" -> result.success(getDisplayResolution());
+                case "setDisplayResolution" -> setDisplayResolution(
+                        call.argument("width"), call.argument("height"), call.argument("density"), result);
                 case "openWifiSettings" -> result.success(openWifiSettings());
                 case "getMediaStoreImages" -> result.success(getMediaStoreImages());
                 case "getMediaStoreVideos" -> result.success(getMediaStoreVideos());
@@ -1219,6 +1230,94 @@ public class MainActivity extends FlutterActivity {
             }
         }
         return false;
+    }
+
+    private boolean canChangeDisplayResolution() {
+        return checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Whether this build may call the window manager methods behind {@code wm size}; Android hides them from apps. */
+    private boolean displayResolutionAvailable() {
+        if (displayResolutionAvailable == null) {
+            displayResolutionAvailable = HiddenApis.exempt("Landroid/view/IWindowManager;");
+        }
+        return displayResolutionAvailable;
+    }
+
+    /**
+     * The size and density the display is drawn at, the panel's own, whether this build can change them at all and
+     * whether it is allowed to. Sizes are in the display's natural orientation, as {@code adb shell wm size} prints
+     * them.
+     */
+    @SuppressWarnings("deprecation")
+    private Map<String, Object> getDisplayResolution() {
+        Display display = getWindowManager().getDefaultDisplay();
+        Display.Mode mode = display.getMode();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getRealMetrics(metrics);
+        boolean turned = display.getRotation() == Surface.ROTATION_90 || display.getRotation() == Surface.ROTATION_270;
+
+        Map<String, Object> resolution = new HashMap<>();
+        resolution.put("physicalWidth", mode.getPhysicalWidth());
+        resolution.put("physicalHeight", mode.getPhysicalHeight());
+        resolution.put("physicalDensity", DisplayMetrics.DENSITY_DEVICE_STABLE);
+        resolution.put("width", turned ? metrics.heightPixels : metrics.widthPixels);
+        resolution.put("height", turned ? metrics.widthPixels : metrics.heightPixels);
+        resolution.put("density", metrics.densityDpi);
+        resolution.put("available", displayResolutionAvailable());
+        resolution.put("canChange", canChangeDisplayResolution());
+        return resolution;
+    }
+
+    /**
+     * Draws the whole display at width × height and density, as {@code adb shell wm size} and {@code wm density}
+     * do; values equal to the panel's own clear the override instead. Needs WRITE_SECURE_SETTINGS, granted over adb.
+     * Fails with the code "permission" without it, and "unavailable" when Android hides the calls from this build.
+     */
+    @SuppressWarnings("deprecation")
+    private void setDisplayResolution(int width, int height, int density, MethodChannel.Result result) {
+        if (!displayResolutionAvailable()) {
+            result.error("unavailable", "Android keeps the window manager calls from this build", null);
+            return;
+        }
+        if (!canChangeDisplayResolution()) {
+            result.error("permission", "WRITE_SECURE_SETTINGS is not granted", null);
+            return;
+        }
+        Display.Mode mode = getWindowManager().getDefaultDisplay().getMode();
+        boolean nativeSize = width == mode.getPhysicalWidth() && height == mode.getPhysicalHeight();
+        boolean nativeDensity = density == DisplayMetrics.DENSITY_DEVICE_STABLE;
+        int userId = android.os.Process.myUid() / PER_USER_RANGE;
+
+        displayExecutor.execute(() -> {
+            try {
+                // The window manager service the wm shell command calls; these methods are not in the SDK.
+                Object windowManager = Class.forName("android.view.WindowManagerGlobal")
+                        .getMethod("getWindowManagerService").invoke(null);
+                Class<?> service = Class.forName("android.view.IWindowManager");
+                if (nativeSize) {
+                    service.getMethod("clearForcedDisplaySize", int.class)
+                            .invoke(windowManager, Display.DEFAULT_DISPLAY);
+                } else {
+                    service.getMethod("setForcedDisplaySize", int.class, int.class, int.class)
+                            .invoke(windowManager, Display.DEFAULT_DISPLAY, width, height);
+                }
+                if (nativeDensity) {
+                    service.getMethod("clearForcedDisplayDensityForUser", int.class, int.class)
+                            .invoke(windowManager, Display.DEFAULT_DISPLAY, userId);
+                } else {
+                    service.getMethod("setForcedDisplayDensityForUser", int.class, int.class, int.class)
+                            .invoke(windowManager, Display.DEFAULT_DISPLAY, density, userId);
+                }
+                runOnUiThread(() -> result.success(null));
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                String code = cause instanceof SecurityException ? "permission" : "failed";
+                runOnUiThread(() -> result.error(code, String.valueOf(cause), null));
+            } catch (ReflectiveOperationException e) {
+                runOnUiThread(() -> result.error("unavailable", e.toString(), null));
+            }
+        });
     }
 
     private boolean openWifiSettings() {

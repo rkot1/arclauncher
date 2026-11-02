@@ -16,14 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'package:flauncher/models/display_resolution.dart';
+import 'package:flauncher/providers/display_resolution_service.dart';
 import 'package:flauncher/widgets/settings/settings_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flauncher/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'backup_page.dart';
 import 'focusable_settings_tile.dart';
 import 'brightness_settings_page.dart';
 import 'date_time_format_page.dart';
+import 'display_resolution_page.dart';
 import 'back_button_action_page.dart';
 import 'wifi_usage_period_page.dart';
 import 'screensaver_clock_style_page.dart';
@@ -51,6 +55,18 @@ class GeneralSettingsPage extends StatelessWidget {
                   leading: const Icon(Icons.brightness_6),
                   title: Text(localizations.brightnessScheduler, style: Theme.of(context).textTheme.bodyMedium),
                   onPressed: () => Navigator.of(context).pushNamed(BrightnessSettingsPage.routeName),
+                ),
+                // Only builds that can reach the window manager calls offer it; the Google Play build cannot.
+                FutureBuilder<DisplayResolution>(
+                  future: Provider.of<DisplayResolutionService>(context, listen: false).read(),
+                  builder: (context, snapshot) => snapshot.data?.available ?? false
+                      ? FocusableSettingsTile(
+                          showChevron: true,
+                          leading: const Icon(Icons.aspect_ratio),
+                          title: Text(localizations.displayResolution, style: Theme.of(context).textTheme.bodyMedium),
+                          onPressed: () => Navigator.of(context).pushNamed(DisplayResolutionPage.routeName),
+                        )
+                      : const SizedBox.shrink(),
                 ),
                 FocusableSettingsTile(
                   showChevron: true,

@@ -1075,4 +1075,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String backupAdbHint(String package) {
     return 'Tune settings from a computer: adb shell am broadcast -a $package.COMMAND --es cmd help';
   }
+
+  @override
+  String get displayResolution => 'Resolution';
+
+  @override
+  String get displayResolutionNative => 'Native';
+
+  @override
+  String get displayResolutionCustom => 'Custom';
+
+  @override
+  String displayResolutionDetails(int width, int height, int density) {
+    return '$width × $height, density $density';
+  }
+
+  @override
+  String get displayResolutionHint =>
+      'A lower resolution makes everything smoother on a 4K panel, and text and icons keep their size. It changes the whole system and stays after a restart. Apps that draw straight onto the panel, such as some built-in whiteboards, may then show pen strokes in the wrong place.';
+
+  @override
+  String displayResolutionPermissionHint(String command) {
+    return 'To change it, allow Arc Launcher once from a computer: $command';
+  }
+
+  @override
+  String get displayResolutionKeepTitle => 'Keep this resolution?';
+
+  @override
+  String displayResolutionKeepBody(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Going back to the previous resolution in $seconds seconds.',
+      one: 'Going back to the previous resolution in 1 second.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get displayResolutionKeep => 'Keep';
+
+  @override
+  String get displayResolutionRevert => 'Revert';
+
+  @override
+  String get displayResolutionUnavailable =>
+      'Arc Launcher can\'t change the resolution on this device. The GitHub release can on most devices.';
+
+  @override
+  String displayResolutionFailed(String error) {
+    return 'Couldn\'t change the resolution: $error';
+  }
 }

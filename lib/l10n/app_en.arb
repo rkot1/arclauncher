@@ -420,6 +420,18 @@
     "backupExportFailed": "Couldn't save: {error}",
     "backupFolderHint": "Backups folder: {path}",
     "backupAdbHint": "Tune settings from a computer: adb shell am broadcast -a {package}.COMMAND --es cmd help",
+    "displayResolution": "Resolution",
+    "displayResolutionNative": "Native",
+    "displayResolutionCustom": "Custom",
+    "displayResolutionDetails": "{width} × {height}, density {density}",
+    "displayResolutionHint": "A lower resolution makes everything smoother on a 4K panel, and text and icons keep their size. It changes the whole system and stays after a restart. Apps that draw straight onto the panel, such as some built-in whiteboards, may then show pen strokes in the wrong place.",
+    "displayResolutionPermissionHint": "To change it, allow Arc Launcher once from a computer: {command}",
+    "displayResolutionKeepTitle": "Keep this resolution?",
+    "displayResolutionKeepBody": "{seconds, plural, =1{Going back to the previous resolution in 1 second.} other{Going back to the previous resolution in {seconds} seconds.}}",
+    "displayResolutionKeep": "Keep",
+    "displayResolutionRevert": "Revert",
+    "displayResolutionUnavailable": "Arc Launcher can't change the resolution on this device. The GitHub release can on most devices.",
+    "displayResolutionFailed": "Couldn't change the resolution: {error}",
     "@customBannerSetFailed": {
       "placeholders": {
         "error": {
@@ -500,6 +512,40 @@
     "@backupAdbHint": {
       "placeholders": {
         "package": {
+          "type": "String"
+        }
+      }
+    },
+    "@displayResolutionDetails": {
+      "placeholders": {
+        "width": {
+          "type": "int"
+        },
+        "height": {
+          "type": "int"
+        },
+        "density": {
+          "type": "int"
+        }
+      }
+    },
+    "@displayResolutionPermissionHint": {
+      "placeholders": {
+        "command": {
+          "type": "String"
+        }
+      }
+    },
+    "@displayResolutionKeepBody": {
+      "placeholders": {
+        "seconds": {
+          "type": "int"
+        }
+      }
+    },
+    "@displayResolutionFailed": {
+      "placeholders": {
+        "error": {
           "type": "String"
         }
       }
