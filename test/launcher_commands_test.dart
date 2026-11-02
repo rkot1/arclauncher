@@ -5,11 +5,13 @@ import 'package:flauncher/launcher_commands.dart';
 import 'package:flauncher/providers/backup_service.dart';
 import 'package:flauncher/providers/brightness_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
+import 'fake_display_resolution_service.dart';
 import 'mocks.mocks.dart';
 
 void main() {
@@ -19,6 +21,7 @@ void main() {
   late SettingsService settingsService;
   late MockAppsService appsService;
   late Directory directory;
+  late FakeDisplayResolutionService display;
   late LauncherCommands commands;
 
   setUp(() async {
@@ -32,13 +35,17 @@ void main() {
     when(appsService.restoreLayout(any)).thenAnswer((_) async => (skippedApps: 0, addedApps: 0));
     directory = Directory.systemTemp.createTempSync("arc_commands_test");
     addTearDown(() => directory.deleteSync(recursive: true));
-    commands = LauncherCommands(BackupService(
-      preferences,
-      settingsService,
-      BrightnessService(preferences),
-      appsService,
-      directory: () async => directory,
-    ));
+    display = FakeDisplayResolutionService(width: 2560, height: 1440, density: 320);
+    commands = LauncherCommands(
+      BackupService(
+        preferences,
+        settingsService,
+        BrightnessService(preferences),
+        appsService,
+        directory: () async => directory,
+      ),
+      display,
+    );
   });
 
   test("set changes one setting live and prints it", () async {
@@ -121,6 +128,54 @@ void main() {
     expect(ok, isTrue);
     expect(output, directory.path);
     expect(directory.existsSync(), isTrue);
+  });
+
+  test("resolution prints the current one and what the panel offers", () async {
+    final (ok, output) = await commands.run({"cmd": "resolution"});
+
+    expect(ok, isTrue);
+    expect(jsonDecode(output), {
+      "resolution": "1440p",
+      "size": "2560x1440",
+      "density": 320,
+      "native": "3840x2160, density 480",
+      "choices": ["native", "1440p", "1080p"],
+      "available": true,
+      "canChange": true,
+    });
+  });
+
+  test("resolution with a value draws the display at it", () async {
+    final (ok, output) = await commands.run({"cmd": "resolution", "value": "1080p"});
+
+    expect(ok, isTrue);
+    expect(jsonDecode(output), {"resolution": "1080p", "size": "1920x1080", "density": 240});
+    expect([for (final resolution in display.applied) resolution.name], ["1080p"]);
+  });
+
+  test("resolution refuses unknown names, a missing permission and platform errors", () async {
+    final (unknownOk, unknownOutput) = await commands.run({"cmd": "resolution", "value": "4k"});
+    expect(unknownOk, isFalse);
+    expect(unknownOutput, contains('"native", "1440p", "1080p"'));
+
+    display.available = false;
+    final (playOk, playOutput) = await commands.run({"cmd": "resolution", "value": "native"});
+    expect(playOk, isFalse);
+    expect(playOutput, contains("this build"));
+
+    display.available = true;
+    display.canChange = false;
+    final (deniedOk, deniedOutput) = await commands.run({"cmd": "resolution", "value": "native"});
+    expect(deniedOk, isFalse);
+    expect(deniedOutput, contains("pm grant com.omeda.arc android.permission.WRITE_SECURE_SETTINGS"));
+
+    display.canChange = true;
+    display.error = PlatformException(code: "unavailable", message: "NoSuchMethodException");
+    final (failedOk, failedOutput) = await commands.run({"cmd": "resolution", "value": "native"});
+    expect(failedOk, isFalse);
+    expect(failedOutput, "error: NoSuchMethodException");
+
+    expect(display.applied, isEmpty);
   });
 
   test("help lists commands and settings, unknown commands fail", () async {

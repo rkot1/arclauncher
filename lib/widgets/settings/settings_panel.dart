@@ -36,6 +36,7 @@ import 'package:flauncher/widgets/settings/app_captions_page.dart';
 import 'package:flauncher/widgets/settings/app_icons_page.dart';
 import 'package:flauncher/widgets/settings/backup_page.dart';
 import 'package:flauncher/widgets/settings/brightness_settings_page.dart';
+import 'package:flauncher/widgets/settings/display_resolution_page.dart';
 import 'package:flauncher/widgets/settings/appearance_panel_page.dart';
 import 'package:flauncher/widgets/settings/focus_border_thickness_page.dart';
 import 'package:flauncher/widgets/settings/misc_panel_page.dart';
@@ -148,6 +149,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
                       return _FastPageRoute(builder: (_) => AccentColorPage());
                     case BrightnessSettingsPage.routeName:
                       return _FastPageRoute(builder: (_) => BrightnessSettingsPage());
+                    case DisplayResolutionPage.routeName:
+                      return _FastPageRoute(builder: (_) => const DisplayResolutionPage());
                     case AppDetailsPage.routeName:
                       return _FastPageRoute(builder: (_) => AppDetailsPage(application: settings.arguments as App));
                     default:

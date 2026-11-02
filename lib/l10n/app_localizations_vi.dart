@@ -1079,4 +1079,55 @@ class AppLocalizationsVi extends AppLocalizations {
   String backupAdbHint(String package) {
     return 'Chỉnh cài đặt từ máy tính: adb shell am broadcast -a $package.COMMAND --es cmd help';
   }
+
+  @override
+  String get displayResolution => 'Độ phân giải';
+
+  @override
+  String get displayResolutionNative => 'Gốc';
+
+  @override
+  String get displayResolutionCustom => 'Tùy chỉnh';
+
+  @override
+  String displayResolutionDetails(int width, int height, int density) {
+    return '$width × $height, mật độ $density';
+  }
+
+  @override
+  String get displayResolutionHint =>
+      'Độ phân giải thấp hơn giúp mọi thứ mượt hơn trên màn hình 4K, chữ và biểu tượng vẫn giữ nguyên kích thước. Thay đổi áp dụng cho toàn hệ thống và vẫn giữ sau khi khởi động lại. Các ứng dụng vẽ trực tiếp lên màn hình, như một số ứng dụng bảng trắng có sẵn, khi đó có thể hiển thị nét bút sai vị trí.';
+
+  @override
+  String displayResolutionPermissionHint(String command) {
+    return 'Để thay đổi, hãy cấp quyền cho Arc Launcher một lần từ máy tính: $command';
+  }
+
+  @override
+  String get displayResolutionKeepTitle => 'Giữ độ phân giải này?';
+
+  @override
+  String displayResolutionKeepBody(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Sẽ quay lại độ phân giải trước sau $seconds giây.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get displayResolutionKeep => 'Giữ';
+
+  @override
+  String get displayResolutionRevert => 'Hoàn tác';
+
+  @override
+  String get displayResolutionUnavailable =>
+      'Arc Launcher không thể thay đổi độ phân giải trên thiết bị này. Bản phát hành trên GitHub có thể làm được trên hầu hết các thiết bị.';
+
+  @override
+  String displayResolutionFailed(String error) {
+    return 'Không thể thay đổi độ phân giải: $error';
+  }
 }

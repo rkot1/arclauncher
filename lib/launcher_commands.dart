@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flauncher/models/display_resolution.dart';
 import 'package:flauncher/models/setting_spec.dart';
 import 'package:flauncher/providers/backup_service.dart';
+import 'package:flauncher/providers/display_resolution_service.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -12,8 +14,9 @@ class LauncherCommands {
   static const _channel = MethodChannel('me.efesser.flauncher/commands');
 
   final BackupService _backupService;
+  final DisplayResolutionService _displayResolutionService;
 
-  LauncherCommands(this._backupService);
+  LauncherCommands(this._backupService, this._displayResolutionService);
 
   void attach() => _channel.setMethodCallHandler(_onMethodCall);
 
@@ -37,6 +40,8 @@ class LauncherCommands {
       return (false, "error: ${e.message}");
     } on FileSystemException catch (e) {
       return (false, "error: ${e.message}${e.path != null ? " (${e.path})" : ""}");
+    } on PlatformException catch (e) {
+      return (false, "error: ${e.message ?? e.code}");
     }
   }
 
@@ -65,6 +70,8 @@ class LauncherCommands {
         return "ok";
       case "folder":
         return (await _backupService.directory()).path;
+      case "resolution":
+        return _resolution(arguments["value"]?.trim());
       case "export":
         return (await _backupService.export(path: arguments["path"])).path;
       case "import":
@@ -78,6 +85,38 @@ class LauncherCommands {
       default:
         throw FormatException("Unknown command $command, run help for the list");
     }
+  }
+
+  /// Prints the display resolution, or draws the display at the one called [name] right away.
+  Future<String> _resolution(String? name) async {
+    final display = await _displayResolutionService.read();
+    Map<String, Object> describe(Resolution resolution) => {
+          "resolution": resolution.name,
+          "size": "${resolution.width}x${resolution.height}",
+          "density": resolution.density,
+        };
+
+    if (name == null) {
+      return _encode({
+        ...describe(display.current),
+        "native": "${display.native.width}x${display.native.height}, density ${display.native.density}",
+        "choices": [for (final option in display.options) option.name],
+        "available": display.available,
+        "canChange": display.canChange,
+      });
+    }
+    final resolution = display.option(name) ??
+        (throw FormatException(
+            "resolution expects one of ${display.options.map((option) => '"${option.name}"').join(", ")}, got \"$name\""));
+    if (!display.available) {
+      throw StateError("this build of the launcher can't change the resolution; the GitHub release can");
+    }
+    if (!display.canChange) {
+      throw StateError("allow the launcher to change the resolution first: "
+          "${DisplayResolutionService.grantCommand(await _package())}");
+    }
+    await _displayResolutionService.apply(resolution);
+    return _encode(describe(resolution));
   }
 
   SettingSpec _spec(String key) =>
@@ -104,13 +143,16 @@ class LauncherCommands {
 
   static String _encode(Object? value) => const JsonEncoder.withIndent("  ").convert(value);
 
-  Future<String> _help() async {
-    String package;
+  static Future<String> _package() async {
     try {
-      package = (await PackageInfo.fromPlatform()).packageName;
+      return (await PackageInfo.fromPlatform()).packageName;
     } catch (_) {
-      package = "com.omeda.arc";
+      return "com.omeda.arc";
     }
+  }
+
+  Future<String> _help() async {
+    final package = await _package();
     final specs = _backupService.specs.values.map((spec) => "  ${spec.describe()}").join("\n");
     return '''
 Usage: adb shell am broadcast -a $package.COMMAND -p $package --es cmd <command> [--es <name> <value>]...
@@ -123,6 +165,7 @@ Commands:
   set --es json '{"<key>": <value>, ...}'
   reset --es key <key>             back to the default
   folder                           the backups folder, created if missing
+  resolution [--es value <name>]   the display resolution, or draw the display at native, 1440p or 1080p
   export [--es path <file>]        save a backup (default: ${(await _backupService.directory()).path})
   import --es path <file>          restore a backup, or --es json '<backup>'
   dump                             print a backup

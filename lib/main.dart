@@ -24,6 +24,7 @@ import 'package:flauncher/flauncher_channel.dart';
 import 'package:flauncher/launcher_commands.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/backup_service.dart';
+import 'package:flauncher/providers/display_resolution_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
 import 'package:flauncher/providers/network_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
@@ -82,8 +83,12 @@ Future<void> main() async {
                 ),
             lazy: false
         ),
+        Provider(create: (_) => DisplayResolutionService(fLauncherChannel)),
         Provider(
-            create: (context) => LauncherCommands(Provider.of(context, listen: false))..attach(),
+            create: (context) => LauncherCommands(
+                  Provider.of(context, listen: false),
+                  Provider.of(context, listen: false),
+                )..attach(),
             dispose: (_, LauncherCommands commands) => commands.detach(),
             lazy: false
         ),

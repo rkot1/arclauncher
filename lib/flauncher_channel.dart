@@ -62,6 +62,15 @@ class FLauncherChannel {
   Future<void> setNavigationBarRevealed(bool revealed) =>
       _methodChannel.invokeMethod("setNavigationBarRevealed", revealed);
 
+  /// The display's size and density, its panel's own, and whether the launcher may change them.
+  Future<Map<dynamic, dynamic>> getDisplayResolution() async =>
+      (await _methodChannel.invokeMapMethod<dynamic, dynamic>("getDisplayResolution"))!;
+
+  /// Throws a [PlatformException] coded "permission" without WRITE_SECURE_SETTINGS, and "unavailable" when Android
+  /// hides the window manager calls from apps.
+  Future<void> setDisplayResolution(int width, int height, int density) =>
+      _methodChannel.invokeMethod("setDisplayResolution", {"width": width, "height": height, "density": density});
+
   Future<bool> applicationExists(String packageName) async =>
       await _methodChannel.invokeMethod('applicationExists', packageName);
 

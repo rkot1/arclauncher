@@ -52,6 +52,7 @@ Once you're in the group, you can enrol in the beta either way:
 - **In-App Updater** - Check for new releases and read changelogs directly inside the app.
 - **Sideloaded App Support** - Displays and launches non-TV Android apps without extra workarounds.
 - **Brightness Scheduler (Experimental)** - Automatically adjust brightness based on time (requires ADB `WRITE_SETTINGS` permission).
+- **Display Resolution** - Draw the whole system at 1440p or 1080p on a 4K panel, with text and icons kept the same size, for smoother menus; a new resolution goes back by itself unless you keep it. GitHub release only, with a one-time ADB grant, see [Display resolution](#display-resolution).
 - **Backup & Restore** - Save your settings and home screen layout to one JSON file, and restore them on this or another device.
 - **Tuning over ADB** - Read and change any setting from a computer while the launcher is on screen. See [Backup, restore and tuning over ADB](#backup-restore-and-tuning-over-adb).
 
@@ -223,6 +224,7 @@ The answer is printed as `Broadcast completed: result=0, data="…"`. `result=1`
 | `set` | `--es key <key> --es value <value>`, or `--es json '<object>'` | Changes settings |
 | `reset` | `--es key <key>` | Puts a setting back to its default |
 | `folder` | | Prints the backups folder, creating it if it is missing |
+| `resolution` | `[--es value <name>]` | Prints the display resolution and the choices, or changes it right away to `native`, `1440p` or `1080p` |
 | `export` | `[--es path <file>]` | Saves a backup, by default in the backups folder, and prints its path |
 | `import` | `--es path <file>`, or `--es json '<backup>'` | Restores a backup |
 | `dump` | | Prints a backup |
@@ -240,6 +242,18 @@ tool/arc-adb pull my-layout.json
 ```bash
 tool/arc-adb push my-layout.json
 ```
+
+## Display resolution
+
+**Settings → System → Resolution** draws the whole system at a lower resolution than the panel's, as `adb shell wm size` and `adb shell wm density` do. On a 4K panel it offers 1440p and 1080p, and scales the density along so text and icons keep their size. Menus get smoother because the GPU draws far fewer pixels. The choice stays after a restart. A new resolution goes back to the previous one after 15 seconds unless you choose *Keep*.
+
+Only the GitHub release offers it: it relies on Android calls outside the public SDK, which Google Play doesn't allow. Android only lets apps do this with the `WRITE_SECURE_SETTINGS` permission, which has to be granted once from a computer. It stays granted across updates, until Arc Launcher is uninstalled:
+
+```bash
+adb shell pm grant com.omeda.arc android.permission.WRITE_SECURE_SETTINGS
+```
+
+Debug builds use `com.omeda.arc.debug` instead. `tool/arc-adb resolution 1440p` changes it from a computer, and `tool/arc-adb resolution` prints what it is now. Apps that draw straight onto the panel, such as some built-in whiteboards, can show pen strokes in the wrong place at a lower resolution.
 
 ## Contributing
 

@@ -144,6 +144,12 @@ android {
     }
 }
 
+dependencies {
+    // Lets the GitHub build call the window manager methods behind `wm size`. Google Play rejects apps that use it.
+    // 6.2 needs compileSdk 37.
+    githubImplementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
+}
+
 flutter {
     source '../..'
 }
