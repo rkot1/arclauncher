@@ -19,6 +19,7 @@
 import 'dart:async';
 
 import 'package:flauncher/models/app_card_style.dart';
+import 'package:flauncher/models/setting_spec.dart';
 import 'package:flauncher/providers/reddit_slideshow.dart';
 import 'package:flauncher/providers/unsplash_slideshow.dart';
 import 'package:flauncher/widgets/settings/back_button_actions.dart';
@@ -125,6 +126,76 @@ const String ACCENT_COLOR_LIME = "AEEA00";
 const String ACCENT_COLOR_AMBER = "FFAB00";
 const String ACCENT_COLOR_ROSE = "FF4081";
 const String ACCENT_COLOR_ICE_BLUE = "80D8FF";
+
+const String _hexColorPattern = r"^[0-9A-Fa-f]{6}$";
+
+/// Everything [SettingsService] stores that a backup carries and adb commands may change.
+///
+/// Left out: what is shown about the current wallpaper, and paths to files on this device.
+final List<SettingSpec> settingSpecs = [
+  const SettingSpec(_appHighlightAnimationEnabledKey, SettingType.boolean),
+  const SettingSpec(_appKeyClickEnabledKey, SettingType.boolean),
+  const SettingSpec(_autoHideAppBar, SettingType.boolean),
+  const SettingSpec(_hideStatusBarInGrid, SettingType.boolean),
+  const SettingSpec(_gradientUuidKey, SettingType.string),
+  const SettingSpec(_backButtonAction, SettingType.string,
+      choices: [BACK_BUTTON_ACTION_NOTHING, BACK_BUTTON_ACTION_CLOCK, BACK_BUTTON_ACTION_SCREENSAVER]),
+  const SettingSpec(_dateFormat, SettingType.string),
+  const SettingSpec(_timeFormat, SettingType.string),
+  const SettingSpec(_showCategoryTitles, SettingType.boolean),
+  const SettingSpec(_showDateInStatusBar, SettingType.boolean),
+  const SettingSpec(_showTimeInStatusBar, SettingType.boolean),
+  const SettingSpec(_wifiUsagePeriod, SettingType.string,
+      choices: [WIFI_USAGE_DAILY, WIFI_USAGE_WEEKLY, WIFI_USAGE_MONTHLY]),
+  const SettingSpec(_showWifiWidgetInStatusBar, SettingType.boolean),
+  const SettingSpec(_showNetworkIndicatorInStatusBar, SettingType.boolean),
+  const SettingSpec(_accentColor, SettingType.string, pattern: _hexColorPattern),
+  const SettingSpec(_screensaverClockStyle, SettingType.string,
+      choices: ["minimal", "bold", "retro", "elegant", "neon", "pixel", "digital"]),
+  const SettingSpec(_dockBackdropFilterDisabled, SettingType.boolean),
+  const SettingSpec(_backgroundBlurDisabled, SettingType.boolean),
+  const SettingSpec(_showWatchNextSection, SettingType.boolean),
+  const SettingSpec(_watchNextBigPictureMode, SettingType.boolean),
+  const SettingSpec(_watchNextHideProgramsWithoutImages, SettingType.boolean),
+  const SettingSpec(_watchNextMaxItems, SettingType.integer, min: 0, max: 50),
+  const SettingSpec(_watchNextExcludedPackages, SettingType.stringList),
+  const SettingSpec(_dockDarkBackground, SettingType.boolean),
+  const SettingSpec(_dockShadowEnabled, SettingType.boolean),
+  const SettingSpec(_showFocusBorders, SettingType.boolean),
+  const SettingSpec(_focusBorderThickness, SettingType.decimal, min: 0.5, max: 8),
+  SettingSpec.choice(_appCaptionVisibility, AppCaptionVisibility.values),
+  SettingSpec.choice(_appCaptionPosition, AppCaptionPosition.values),
+  const SettingSpec(_appCaptionFont, SettingType.string),
+  const SettingSpec(_appCaptionFontSize, SettingType.decimal, min: 6, max: 48),
+  const SettingSpec(_appCaptionFontWeight, SettingType.integer, min: 100, max: 900),
+  SettingSpec.choice(_appCaptionCase, AppCaptionCase.values),
+  SettingSpec.choice(_appCaptionAlignment, AppCaptionAlignment.values),
+  SettingSpec.choice(_appCaptionColor, AppCaptionColor.values),
+  SettingSpec.choice(_appCaptionBackground, AppCaptionBackground.values),
+  SettingSpec.choice(_appCaptionTextShadow, AppCaptionTextShadow.values),
+  SettingSpec.choice(_appCaptionBoxShadow, AppCaptionBoxShadow.values),
+  SettingSpec.choice(_appCardImageMode, AppCardImageMode.values),
+  SettingSpec.choice(_appIconVariant, AppIconVariant.values),
+  SettingSpec.choice(_appIconSize, AppIconSize.values),
+  SettingSpec.choice(_appIconTint, AppIconTint.values),
+  SettingSpec.choice(_appCardBackground, AppCardBackground.values),
+  const SettingSpec(_appCardBackgroundColor, SettingType.string, pattern: _hexColorPattern),
+  SettingSpec(_appCardGradient, SettingType.integer, min: 0, max: kAppCardGradients.length - 1),
+  SettingSpec.choice(_appCardShadow, AppCardShadow.values),
+  SettingSpec.choice(_navigationBarMode, SystemNavigationBarMode.values),
+  const SettingSpec("time_based_wallpaper_enabled", SettingType.boolean),
+  const SettingSpec("unsplash_access_key", SettingType.string, secret: true),
+  const SettingSpec("unsplash_slideshow_enabled", SettingType.boolean),
+  const SettingSpec("unsplash_interval_minutes", SettingType.integer, min: 1),
+  const SettingSpec("unsplash_day_sources", SettingType.stringList),
+  const SettingSpec("unsplash_night_sources", SettingType.stringList),
+  const SettingSpec("reddit_wallpaper_enabled", SettingType.boolean),
+  const SettingSpec("reddit_interval_minutes", SettingType.integer, min: 1),
+  const SettingSpec("reddit_subreddits", SettingType.stringList),
+  SettingSpec("reddit_sort", SettingType.string, choices: [for (final sort in RedditSort.values) sort.key]),
+  const SettingSpec("reddit_client_id", SettingType.string, secret: true),
+  const SettingSpec("reddit_client_secret", SettingType.string, secret: true),
+];
 
 class SettingsService extends ChangeNotifier {
   static final defaultDateFormat = "EEEE d";
@@ -247,6 +318,15 @@ class SettingsService extends ChangeNotifier {
   }
 
   SettingsService(this._sharedPreferences);
+
+  /// Tells listeners about values written straight to preferences, e.g. by a backup restore.
+  Future<void> reload() async {
+    if (_sharedPreferences.containsKey(_appCaptionVisibility)) {
+      // Keep the legacy switch in step, as [setAppCaptionStyle] does.
+      await _sharedPreferences.setBool(_showAppNamesBelowIcons, appCaptionStyle.visible);
+    }
+    notifyListeners();
+  }
 
   Future<void> set(String key, bool value) async {
     await _sharedPreferences.setBool(key, value);

@@ -18,8 +18,10 @@
 
 package com.omeda.arc;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.*;
 import android.content.res.Resources;
@@ -35,6 +37,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
@@ -47,6 +50,7 @@ import android.Manifest;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.annotation.RequiresApi;
 
@@ -57,6 +61,7 @@ import java.util.Map;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import android.app.usage.NetworkStats;
@@ -73,6 +78,7 @@ import io.flutter.plugin.platform.PlatformPlugin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,16 +94,26 @@ public class MainActivity extends FlutterActivity {
     private final String METHOD_CHANNEL = "me.efesser.flauncher/method";
     private final String APPS_EVENT_CHANNEL = "me.efesser.flauncher/event_apps";
     private final String NETWORK_EVENT_CHANNEL = "me.efesser.flauncher/event_network";
+    private final String COMMANDS_CHANNEL = "me.efesser.flauncher/commands";
     private static final String PERMISSION_READ_TV_LISTINGS = "android.permission.READ_TV_LISTINGS";
     private static final int REQUEST_CODE_READ_TV_LISTINGS = 1001;
     private static final String COLUMN_ASPECT_RATIO = "aspect_ratio";
     private static final int REQUEST_CODE_PICK_FONT = 1002;
+    private static final int REQUEST_CODE_OPEN_BACKUP = 1003;
+    private static final int REQUEST_CODE_SAVE_BACKUP = 1004;
+    private static final int MAX_BACKUP_SIZE = 8 * 1024 * 1024;
     // App card icons are drawn up to ~200 physical pixels tall on 1080p TVs.
     private static final int ICON_VARIANT_RENDER_SIZE = 256;
 
     private final ExecutorService iconExecutor = Executors.newSingleThreadExecutor();
     private MethodChannel.Result pendingFontPickResult;
     private String pendingFontPickDirectory;
+    private MethodChannel.Result pendingOpenBackupResult;
+    private MethodChannel.Result pendingSaveBackupResult;
+    private String pendingSaveBackupContent;
+
+    private MethodChannel commandsChannel;
+    private BroadcastReceiver commandReceiver;
 
     // "visible", "hidden" or "bottomEdge" (hidden, revealed while the pointer rests on the bottom edge).
     private String navigationBarMode = "visible";
@@ -123,6 +139,8 @@ public class MainActivity extends FlutterActivity {
                     });
                 }
                 case "pickFontFile" -> pickFontFile(call.argument("directory"), result);
+                case "openBackupFile" -> openBackupFile(result);
+                case "saveBackupFile" -> saveBackupFile(call.argument("name"), call.argument("content"), result);
                 case "setNavigationBarMode" -> {
                     navigationBarMode = call.arguments();
                     navigationBarRevealed = false;
@@ -240,6 +258,65 @@ public class MainActivity extends FlutterActivity {
 
         new EventChannel(messenger, NETWORK_EVENT_CHANNEL).setStreamHandler(
                 new NetworkEventStreamHandler(this));
+
+        commandsChannel = new MethodChannel(messenger, COMMANDS_CHANNEL);
+        registerCommandReceiver();
+    }
+
+    @Override
+    public void cleanUpFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+        if (commandReceiver != null) {
+            unregisterReceiver(commandReceiver);
+            commandReceiver = null;
+        }
+        super.cleanUpFlutterEngine(flutterEngine);
+    }
+
+    /**
+     * Passes {@code adb shell am broadcast -a <package>.COMMAND --es cmd ...} on to Dart, and answers with its
+     * output as the broadcast result: result=0 when the command worked, 1 when it failed. Only senders holding
+     * DUMP get through, which are the adb shell and the system, not other apps.
+     */
+    @SuppressWarnings("deprecation")
+    private void registerCommandReceiver() {
+        commandReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Map<String, String> arguments = new HashMap<>();
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    for (String key : extras.keySet()) {
+                        Object value = extras.get(key);
+                        arguments.put(key, value != null ? String.valueOf(value) : null);
+                    }
+                }
+
+                PendingResult pendingResult = goAsync();
+                commandsChannel.invokeMethod("run", arguments, new MethodChannel.Result() {
+                    @Override
+                    public void success(Object reply) {
+                        Map<?, ?> map = reply instanceof Map ? (Map<?, ?>) reply : new HashMap<>();
+                        boolean ok = Boolean.TRUE.equals(map.get("ok"));
+                        pendingResult.setResult(ok ? 0 : 1, String.valueOf(map.get("output")), null);
+                        pendingResult.finish();
+                    }
+
+                    @Override
+                    public void error(@NonNull String code, String message, Object details) {
+                        pendingResult.setResult(1, "error: " + message, null);
+                        pendingResult.finish();
+                    }
+
+                    @Override
+                    public void notImplemented() {
+                        pendingResult.setResult(1, "error: the launcher is still starting, try again in a moment", null);
+                        pendingResult.finish();
+                    }
+                });
+            }
+        };
+        ContextCompat.registerReceiver(this, commandReceiver, new IntentFilter(getPackageName() + ".COMMAND"),
+                Manifest.permission.DUMP, null, ContextCompat.RECEIVER_EXPORTED);
     }
 
     private List<Map<String, Serializable>> getApplications() {
@@ -562,9 +639,150 @@ public class MainActivity extends FlutterActivity {
         }
     }
 
+    /**
+     * Lets the user pick a backup with whatever handles GET_CONTENT. Answers with its text, or null when
+     * cancelled; fails with "unavailable" when nothing on the device can pick files.
+     */
+    private void openBackupFile(MethodChannel.Result result) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("*/*")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                        "application/json", "text/plain", "application/octet-stream"});
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            result.error("unavailable", "No app on this device can open files", null);
+            return;
+        }
+        if (pendingOpenBackupResult != null) {
+            pendingOpenBackupResult.success(null);
+        }
+        pendingOpenBackupResult = result;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_OPEN_BACKUP);
+        } catch (Exception e) {
+            pendingOpenBackupResult = null;
+            result.error("unavailable", e.getMessage(), null);
+        }
+    }
+
+    private void onBackupFileOpened(Uri uri) {
+        MethodChannel.Result result = pendingOpenBackupResult;
+        pendingOpenBackupResult = null;
+        if (result == null) {
+            return;
+        }
+        if (uri == null) {
+            result.success(null);
+            return;
+        }
+
+        iconExecutor.execute(() -> {
+            String text = null;
+            String error = null;
+            try (InputStream input = getContentResolver().openInputStream(uri)) {
+                if (input == null) {
+                    throw new IOException("The file cannot be opened");
+                }
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[16 * 1024];
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                    if (output.size() > MAX_BACKUP_SIZE) {
+                        throw new IOException("The file is too large to be a backup");
+                    }
+                }
+                text = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            String finalText = text;
+            String finalError = error;
+            runOnUiThread(() -> {
+                if (finalError != null) {
+                    result.error("io", finalError, null);
+                } else {
+                    result.success(finalText);
+                }
+            });
+        });
+    }
+
+    /**
+     * Lets the user choose where to save a copy of a backup (CREATE_DOCUMENT). Answers true once written and
+     * false when cancelled; fails with "unavailable" when nothing on the device can save files.
+     */
+    private void saveBackupFile(String name, String content, MethodChannel.Result result) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .setType("application/json")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_TITLE, name);
+
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            result.error("unavailable", "No app on this device can save files", null);
+            return;
+        }
+        if (pendingSaveBackupResult != null) {
+            pendingSaveBackupResult.success(false);
+        }
+        pendingSaveBackupResult = result;
+        pendingSaveBackupContent = content;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_SAVE_BACKUP);
+        } catch (Exception e) {
+            pendingSaveBackupResult = null;
+            pendingSaveBackupContent = null;
+            result.error("unavailable", e.getMessage(), null);
+        }
+    }
+
+    private void onBackupFileCreated(Uri uri) {
+        MethodChannel.Result result = pendingSaveBackupResult;
+        String content = pendingSaveBackupContent;
+        pendingSaveBackupResult = null;
+        pendingSaveBackupContent = null;
+        if (result == null) {
+            return;
+        }
+        if (uri == null || content == null) {
+            result.success(false);
+            return;
+        }
+
+        iconExecutor.execute(() -> {
+            String error = null;
+            try (OutputStream output = getContentResolver().openOutputStream(uri, "w")) {
+                if (output == null) {
+                    throw new IOException("The file cannot be written");
+                }
+                output.write(content.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            String finalError = error;
+            runOnUiThread(() -> {
+                if (finalError != null) {
+                    result.error("io", finalError, null);
+                } else {
+                    result.success(true);
+                }
+            });
+        });
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Uri resultUri = resultCode == RESULT_OK && data != null ? data.getData() : null;
+        if (requestCode == REQUEST_CODE_OPEN_BACKUP) {
+            onBackupFileOpened(resultUri);
+            return;
+        }
+        if (requestCode == REQUEST_CODE_SAVE_BACKUP) {
+            onBackupFileCreated(resultUri);
+            return;
+        }
         if (requestCode != REQUEST_CODE_PICK_FONT || pendingFontPickResult == null) {
             return;
         }

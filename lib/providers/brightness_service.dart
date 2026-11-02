@@ -18,6 +18,7 @@
 
 import 'dart:async';
 
+import 'package:flauncher/models/setting_spec.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_brightness/screen_brightness.dart';
@@ -30,6 +31,16 @@ const _brightnessDay = "brightness_day";             // 9am - 3pm
 const _brightnessAfternoon = "brightness_afternoon"; // 3pm - 6pm
 const _brightnessEvening = "brightness_evening";     // 6pm - 10pm
 const _brightnessNight = "brightness_night";         // 10pm - 6am
+
+/// The scheduler settings a backup carries and adb commands may change; brightness is a percentage.
+const List<SettingSpec> brightnessSettingSpecs = [
+  SettingSpec(_brightnessEnabled, SettingType.boolean),
+  SettingSpec(_brightnessMorning, SettingType.integer, min: 0, max: 100),
+  SettingSpec(_brightnessDay, SettingType.integer, min: 0, max: 100),
+  SettingSpec(_brightnessAfternoon, SettingType.integer, min: 0, max: 100),
+  SettingSpec(_brightnessEvening, SettingType.integer, min: 0, max: 100),
+  SettingSpec(_brightnessNight, SettingType.integer, min: 0, max: 100),
+];
 
 /// Time slot definitions
 enum TimeSlot {
@@ -170,6 +181,15 @@ class BrightnessService extends ChangeNotifier {
     }
     
     notifyListeners();
+  }
+
+  /// Picks up values written straight to preferences, e.g. by a backup restore.
+  Future<void> reload() async {
+    if (isEnabled || _timer != null) {
+      await setEnabled(isEnabled);
+    } else {
+      notifyListeners();
+    }
   }
 
   TimeSlot getCurrentTimeSlot() {

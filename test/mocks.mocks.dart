@@ -463,6 +463,33 @@ class MockFLauncherChannel extends _i1.Mock implements _i13.FLauncherChannel {
       ) as _i10.Future<String?>);
 
   @override
+  _i10.Future<String?> openBackupFile() => (super.noSuchMethod(
+        Invocation.method(
+          #openBackupFile,
+          [],
+        ),
+        returnValue: _i10.Future<String?>.value(),
+        returnValueForMissingStub: _i10.Future<String?>.value(),
+      ) as _i10.Future<String?>);
+
+  @override
+  _i10.Future<bool> saveBackupFile(
+    String? name,
+    String? content,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveBackupFile,
+          [
+            name,
+            content,
+          ],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+        returnValueForMissingStub: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+  @override
   _i10.Future<void> setNavigationBarMode(String? mode) => (super.noSuchMethod(
         Invocation.method(
           #setNavigationBarMode,
@@ -1773,6 +1800,33 @@ class MockAppsService extends _i1.Mock implements _i17.AppsService {
       ) as _i10.Future<void>);
 
   @override
+  _i10.Future<Map<String, Object?>> exportLayout() => (super.noSuchMethod(
+        Invocation.method(
+          #exportLayout,
+          [],
+        ),
+        returnValue:
+            _i10.Future<Map<String, Object?>>.value(<String, Object?>{}),
+        returnValueForMissingStub:
+            _i10.Future<Map<String, Object?>>.value(<String, Object?>{}),
+      ) as _i10.Future<Map<String, Object?>>);
+
+  @override
+  _i10.Future<({int addedApps, int skippedApps})> restoreLayout(
+          Map<String, dynamic>? layout) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #restoreLayout,
+          [layout],
+        ),
+        returnValue: _i10.Future<({int addedApps, int skippedApps})>.value(
+            (addedApps: 0, skippedApps: 0)),
+        returnValueForMissingStub:
+            _i10.Future<({int addedApps, int skippedApps})>.value(
+                (addedApps: 0, skippedApps: 0)),
+      ) as _i10.Future<({int addedApps, int skippedApps})>);
+
+  @override
   void addListener(_i5.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
@@ -2207,6 +2261,16 @@ class MockSettingsService extends _i1.Mock implements _i19.SettingsService {
         Invocation.method(
           #setFocusBorderThickness,
           [value],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> reload() => (super.noSuchMethod(
+        Invocation.method(
+          #reload,
+          [],
         ),
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),
@@ -3460,6 +3524,16 @@ class MockFLauncherDatabase extends _i1.Mock implements _i8.FLauncherDatabase {
         Invocation.method(
           #replaceAppsCategories,
           [value],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> clearLayout() => (super.noSuchMethod(
+        Invocation.method(
+          #clearLayout,
+          [],
         ),
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),

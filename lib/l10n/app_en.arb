@@ -395,6 +395,28 @@
     "navigationBarVisible": "Always visible",
     "navigationBarHidden": "Hidden, swipe up",
     "navigationBarBottomEdge": "Show at bottom edge",
+    "backupSettings": "Backup & restore",
+    "backupExport": "Export settings & layout",
+    "backupExportHint": "Saves a JSON file in the backups folder",
+    "backupSaveCopy": "Save a copy to…",
+    "backupSaveCopyHint": "Pick a place such as a USB drive",
+    "backupRestoreFromFile": "Restore from file…",
+    "backupSavedBackups": "Saved backups",
+    "backupNoBackups": "No backups yet",
+    "backupBeforeRestore": "Saved before the last restore",
+    "backupSavedTo": "Saved to {path}",
+    "backupCopySaved": "Copy saved",
+    "backupSaveUnavailable": "No app on this device can save files. Copy backups from the folder below with adb instead.",
+    "backupOpenUnavailable": "No app on this device can open files. Copy the file into the folder below instead.",
+    "backupRestoreTitle": "Restore this backup?",
+    "backupRestoreBody": "Your settings and layout will be replaced. The current ones are saved first as {undoFile}, so you can go back.",
+    "backupRestore": "Restore",
+    "backupRestored": "Backup restored",
+    "backupRestoredSkipped": "{count, plural, =1{Backup restored. 1 app isn't installed here and was skipped.} other{Backup restored. {count} apps aren't installed here and were skipped.}}",
+    "backupRestoreFailed": "Couldn't restore: {error}",
+    "backupExportFailed": "Couldn't save: {error}",
+    "backupFolderHint": "Backups folder: {path}",
+    "backupAdbHint": "Tune settings from a computer: adb shell am broadcast -a {package}.COMMAND --es cmd help",
     "@customBannerSetFailed": {
       "placeholders": {
         "error": {
@@ -426,6 +448,55 @@
     "@captionImportFontHint": {
       "placeholders": {
         "path": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupSavedTo": {
+      "placeholders": {
+        "path": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupRestoreBody": {
+      "placeholders": {
+        "undoFile": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupRestoredSkipped": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "@backupRestoreFailed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupExportFailed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupFolderHint": {
+      "placeholders": {
+        "path": {
+          "type": "String"
+        }
+      }
+    },
+    "@backupAdbHint": {
+      "placeholders": {
+        "package": {
           "type": "String"
         }
       }

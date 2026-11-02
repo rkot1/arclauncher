@@ -977,4 +977,93 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get navigationBarBottomEdge => 'Show at bottom edge';
+
+  @override
+  String get backupSettings => 'Backup & restore';
+
+  @override
+  String get backupExport => 'Export settings & layout';
+
+  @override
+  String get backupExportHint => 'Saves a JSON file in the backups folder';
+
+  @override
+  String get backupSaveCopy => 'Save a copy to…';
+
+  @override
+  String get backupSaveCopyHint => 'Pick a place such as a USB drive';
+
+  @override
+  String get backupRestoreFromFile => 'Restore from file…';
+
+  @override
+  String get backupSavedBackups => 'Saved backups';
+
+  @override
+  String get backupNoBackups => 'No backups yet';
+
+  @override
+  String get backupBeforeRestore => 'Saved before the last restore';
+
+  @override
+  String backupSavedTo(String path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get backupCopySaved => 'Copy saved';
+
+  @override
+  String get backupSaveUnavailable =>
+      'No app on this device can save files. Copy backups from the folder below with adb instead.';
+
+  @override
+  String get backupOpenUnavailable =>
+      'No app on this device can open files. Copy the file into the folder below instead.';
+
+  @override
+  String get backupRestoreTitle => 'Restore this backup?';
+
+  @override
+  String backupRestoreBody(String undoFile) {
+    return 'Your settings and layout will be replaced. The current ones are saved first as $undoFile, so you can go back.';
+  }
+
+  @override
+  String get backupRestore => 'Restore';
+
+  @override
+  String get backupRestored => 'Backup restored';
+
+  @override
+  String backupRestoredSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Backup restored. $count apps aren\'t installed here and were skipped.',
+      one: 'Backup restored. 1 app isn\'t installed here and was skipped.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreFailed(String error) {
+    return 'Couldn\'t restore: $error';
+  }
+
+  @override
+  String backupExportFailed(String error) {
+    return 'Couldn\'t save: $error';
+  }
+
+  @override
+  String backupFolderHint(String path) {
+    return 'Backups folder: $path';
+  }
+
+  @override
+  String backupAdbHint(String package) {
+    return 'Tune settings from a computer: adb shell am broadcast -a $package.COMMAND --es cmd help';
+  }
 }

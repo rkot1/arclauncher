@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Sends Arc Launcher's adb commands and prints the reply (see "Backup, restore and tuning over ADB" in the README).
+#
+#   tool/arc-adb help | list | dump | folder
+#   tool/arc-adb get <key>
+#   tool/arc-adb set <key> <value>
+#   tool/arc-adb set '<JSON object of settings>'
+#   tool/arc-adb reset <key>
+#   tool/arc-adb export [<device path>]    save a backup on the device
+#   tool/arc-adb import <device path>      restore a backup already on the device
+#   tool/arc-adb pull [<local file>]       save a backup and copy it here
+#   tool/arc-adb push <local file>         copy a backup to the device and restore it
+#
+# ARC_PACKAGE picks the app (default com.omeda.arc; debug builds are com.omeda.arc.debug).
+# ADB is the adb command to run, e.g. ADB="adb -s 192.168.1.20:5555".
+set -euo pipefail
+
+package="${ARC_PACKAGE:-com.omeda.arc}"
+read -r -a adb <<< "${ADB:-adb}"
+
+# Quotes an argument for the shell on the device.
+quote() {
+  local escaped="${1//\'/\'\\\'\'}"
+  printf "'%s'" "$escaped"
+}
+
+# Sends a command with its --es extras, given as name/value pairs. Prints the reply and fails when the command did.
+send() {
+  local command=(am broadcast -a "$package.COMMAND" -p "$package")
+  while (($#)); do
+    command+=(--es "$1" "$(quote "$2")")
+    shift 2
+  done
+
+  local reply
+  reply="$("${adb[@]}" shell "${command[*]}")"
+  reply="${reply//$'\r'/}"
+  local result="${reply#*Broadcast completed: result=}"
+  if [[ "$result" == "$reply" || "$result" != *'data="'* ]]; then
+    echo "Arc Launcher did not answer. Is $package installed and running?" >&2
+    return 1
+  fi
+  local data="${result#*data=\"}"
+  printf '%s\n' "${data%\"*}"
+  [[ "${result%%,*}" == 0 ]]
+}
+
+command="${1:-help}"
+shift || true
+case "$command" in
+  help | list | dump | folder)
+    send cmd "$command"
+    ;;
+  get | reset)
+    send cmd "$command" key "${1:?usage: arc-adb $command <key>}"
+    ;;
+  set)
+    if (($# == 1)); then
+      send cmd set json "$1"
+    else
+      send cmd set key "${1:?usage: arc-adb set <key> <value>}" value "${2?usage: arc-adb set <key> <value>}"
+    fi
+    ;;
+  export)
+    if (($#)); then send cmd export path "$1"; else send cmd export; fi
+    ;;
+  import)
+    send cmd import path "${1:?usage: arc-adb import <device path>}"
+    ;;
+  pull)
+    path="$(send cmd export)"
+    "${adb[@]}" pull "$path" "${1:-$(basename "$path")}"
+    ;;
+  push)
+    file="${1:?usage: arc-adb push <local file>}"
+    # The launcher creates its backups folder on request; adb is not allowed to on a fresh install.
+    folder="$(send cmd folder)"
+    remote="$folder/$(basename "$file")"
+    "${adb[@]}" push "$file" "$remote" > /dev/null
+    send cmd import path "$remote"
+    ;;
+  *)
+    echo "Unknown command $command, try: arc-adb help" >&2
+    exit 2
+    ;;
+esac

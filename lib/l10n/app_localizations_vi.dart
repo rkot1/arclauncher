@@ -982,4 +982,92 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get navigationBarBottomEdge => 'Hiện ở mép dưới';
+
+  @override
+  String get backupSettings => 'Sao lưu và khôi phục';
+
+  @override
+  String get backupExport => 'Xuất cài đặt và bố cục';
+
+  @override
+  String get backupExportHint => 'Lưu một tệp JSON vào thư mục sao lưu';
+
+  @override
+  String get backupSaveCopy => 'Lưu bản sao vào…';
+
+  @override
+  String get backupSaveCopyHint => 'Chọn nơi lưu, ví dụ ổ USB';
+
+  @override
+  String get backupRestoreFromFile => 'Khôi phục từ tệp…';
+
+  @override
+  String get backupSavedBackups => 'Các bản sao lưu';
+
+  @override
+  String get backupNoBackups => 'Chưa có bản sao lưu nào';
+
+  @override
+  String get backupBeforeRestore => 'Được lưu trước lần khôi phục gần nhất';
+
+  @override
+  String backupSavedTo(String path) {
+    return 'Đã lưu vào $path';
+  }
+
+  @override
+  String get backupCopySaved => 'Đã lưu bản sao';
+
+  @override
+  String get backupSaveUnavailable =>
+      'Không có ứng dụng nào trên thiết bị này có thể lưu tệp. Hãy sao chép bản sao lưu từ thư mục bên dưới bằng adb.';
+
+  @override
+  String get backupOpenUnavailable =>
+      'Không có ứng dụng nào trên thiết bị này có thể mở tệp. Hãy sao chép tệp vào thư mục bên dưới.';
+
+  @override
+  String get backupRestoreTitle => 'Khôi phục bản sao lưu này?';
+
+  @override
+  String backupRestoreBody(String undoFile) {
+    return 'Cài đặt và bố cục của bạn sẽ được thay thế. Cài đặt hiện tại được lưu trước dưới tên $undoFile để bạn có thể quay lại.';
+  }
+
+  @override
+  String get backupRestore => 'Khôi phục';
+
+  @override
+  String get backupRestored => 'Đã khôi phục bản sao lưu';
+
+  @override
+  String backupRestoredSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Đã khôi phục bản sao lưu. Đã bỏ qua $count ứng dụng chưa được cài đặt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreFailed(String error) {
+    return 'Không thể khôi phục: $error';
+  }
+
+  @override
+  String backupExportFailed(String error) {
+    return 'Không thể lưu: $error';
+  }
+
+  @override
+  String backupFolderHint(String path) {
+    return 'Thư mục sao lưu: $path';
+  }
+
+  @override
+  String backupAdbHint(String package) {
+    return 'Chỉnh cài đặt từ máy tính: adb shell am broadcast -a $package.COMMAND --es cmd help';
+  }
 }
