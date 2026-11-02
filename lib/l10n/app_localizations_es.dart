@@ -350,6 +350,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get unsplashInterval => 'Cambiar cada';
 
   @override
+  String get unsplashNextPhoto => 'Next photo now';
+
+  @override
+  String get unsplashNextPhotoLoading => 'Loading the next photo…';
+
+  @override
+  String get unsplashNextPhotoShown => 'New photo on the home screen';
+
+  @override
+  String get unsplashNextPhotoFailed =>
+      'Couldn\'t load a photo. Check the access key and the connection, or try again later.';
+
+  @override
   String unsplashIntervalMinutes(int minutes) {
     return '$minutes min';
   }

@@ -732,6 +732,30 @@ abstract class AppLocalizations {
   /// **'Change every'**
   String get unsplashInterval;
 
+  /// No description provided for @unsplashNextPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Next photo now'**
+  String get unsplashNextPhoto;
+
+  /// No description provided for @unsplashNextPhotoLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the next photo…'**
+  String get unsplashNextPhotoLoading;
+
+  /// No description provided for @unsplashNextPhotoShown.
+  ///
+  /// In en, this message translates to:
+  /// **'New photo on the home screen'**
+  String get unsplashNextPhotoShown;
+
+  /// No description provided for @unsplashNextPhotoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load a photo. Check the access key and the connection, or try again later.'**
+  String get unsplashNextPhotoFailed;
+
   /// No description provided for @unsplashIntervalMinutes.
   ///
   /// In en, this message translates to:

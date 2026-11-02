@@ -20,6 +20,7 @@ void main() {
   late SharedPreferences preferences;
   late SettingsService settingsService;
   late MockAppsService appsService;
+  late MockWallpaperService wallpaperService;
   late Directory directory;
   late FakeDisplayResolutionService display;
   late LauncherCommands commands;
@@ -33,6 +34,7 @@ void main() {
     when(appsService.initialized).thenReturn(true);
     when(appsService.exportLayout()).thenAnswer((_) async => {"sections": [], "hiddenApps": []});
     when(appsService.restoreLayout(any)).thenAnswer((_) async => (skippedApps: 0, addedApps: 0));
+    wallpaperService = MockWallpaperService();
     directory = Directory.systemTemp.createTempSync("arc_commands_test");
     addTearDown(() => directory.deleteSync(recursive: true));
     display = FakeDisplayResolutionService(width: 2560, height: 1440, density: 320);
@@ -44,6 +46,7 @@ void main() {
         appsService,
         directory: () async => directory,
       ),
+      wallpaperService,
       display,
     );
   });
@@ -176,6 +179,21 @@ void main() {
     expect(failedOutput, "error: NoSuchMethodException");
 
     expect(display.applied, isEmpty);
+  });
+
+  test("next-photo shows the next slideshow photo and says whose it is", () async {
+    when(wallpaperService.nextSlideshowPhoto()).thenAnswer((_) async => true);
+    when(wallpaperService.slideshowAuthor).thenReturn("Ann");
+
+    expect(await commands.run({"cmd": "next-photo"}), (true, "showing a photo by Ann"));
+
+    when(wallpaperService.nextSlideshowPhoto()).thenAnswer((_) async => false);
+    final (failedOk, failedOutput) = await commands.run({"cmd": "next-photo"});
+    expect(failedOk, isFalse);
+    expect(failedOutput, startsWith("error: could not load a photo"));
+
+    when(wallpaperService.nextSlideshowPhoto()).thenAnswer((_) async => throw StateError("the Unsplash slideshow is off"));
+    expect(await commands.run({"cmd": "next-photo"}), (false, "error: the Unsplash slideshow is off"));
   });
 
   test("help lists commands and settings, unknown commands fail", () async {

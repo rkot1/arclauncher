@@ -28,10 +28,12 @@ import 'package:flauncher/providers/reddit_slideshow.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/providers/unsplash_slideshow.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class WallpaperService extends ChangeNotifier {
   final SettingsService _settingsService;
+  final http.Client? _unsplashClient;
   final FLauncherChannel _channel = FLauncherChannel();
 
   late File _wallpaperFile;
@@ -48,6 +50,7 @@ class WallpaperService extends ChangeNotifier {
   Timer? _slideshowTimer;
   final Random _random = Random();
   File? _slideshowFile;
+  Future<bool>? _slideshowFetch;
 
   late RedditSlideshow _redditSlideshow;
   Timer? _redditTimer;
@@ -99,7 +102,9 @@ class WallpaperService extends ChangeNotifier {
     orElse: () => FLauncherGradients.saintPetersburg,
   );
 
-  WallpaperService(this._settingsService) : _wallpaper = null {
+  WallpaperService(this._settingsService, {@visibleForTesting http.Client? unsplashClient})
+      : _unsplashClient = unsplashClient,
+        _wallpaper = null {
     _settingsService.addListener(_onSettingsChanged);
     _init();
   }
@@ -163,7 +168,7 @@ class WallpaperService extends ChangeNotifier {
     _wallpaperVideoFile = File("${directory.path}/wallpaper_video");
     _wallpaperDayVideoFile = File("${directory.path}/wallpaper_day_video");
     _wallpaperNightVideoFile = File("${directory.path}/wallpaper_night_video");
-    _slideshow = UnsplashSlideshow(Directory("${directory.path}/slideshow"));
+    _slideshow = UnsplashSlideshow(Directory("${directory.path}/slideshow"), client: _unsplashClient);
     _slideshowFile = newestCachedImage(_slideshow.cacheDir);
     _redditSlideshow = RedditSlideshow(Directory("${directory.path}/reddit_slideshow"));
     _redditFile = newestCachedImage(_redditSlideshow.cacheDir);
@@ -188,7 +193,7 @@ class WallpaperService extends ChangeNotifier {
     _slideshowTimer = null;
     if (!_settingsService.unsplashSlideshowEnabled) return;
     final interval = Duration(minutes: _settingsService.unsplashIntervalMinutes);
-    _slideshowTimer = Timer.periodic(interval, (_) => _advanceSlideshow());
+    _startSlideshowTimer();
     final file = _slideshowFile;
     // Reuse the cached image after a reboot unless it is already due for a change.
     if (file == null || DateTime.now().difference(file.lastModifiedSync()) >= interval) {
@@ -196,7 +201,36 @@ class WallpaperService extends ChangeNotifier {
     }
   }
 
-  Future<void> _advanceSlideshow() async {
+  void _startSlideshowTimer() {
+    _slideshowTimer?.cancel();
+    _slideshowTimer = Timer.periodic(
+      Duration(minutes: _settingsService.unsplashIntervalMinutes),
+      (_) => _advanceSlideshow(),
+    );
+  }
+
+  /// Shows a new Unsplash photo now and starts the interval over, so the next automatic change comes a
+  /// full interval later. Answers whether a new photo is on screen; throws a [StateError] while the
+  /// slideshow is off.
+  Future<bool> nextSlideshowPhoto() async {
+    if (!_settingsService.unsplashSlideshowEnabled) {
+      throw StateError("the Unsplash slideshow is off");
+    }
+    if (!_initialized) {
+      throw StateError("the wallpaper is still loading, try again in a moment");
+    }
+    final shown = await _advanceSlideshow();
+    if (shown && _settingsService.unsplashSlideshowEnabled) {
+      _startSlideshowTimer();
+    }
+    return shown;
+  }
+
+  /// Fetches and shows the next photo, joining a fetch already under way instead of starting another.
+  Future<bool> _advanceSlideshow() =>
+      _slideshowFetch ??= _fetchSlideshowPhoto().whenComplete(() => _slideshowFetch = null);
+
+  Future<bool> _fetchSlideshowPhoto() async {
     final hour = DateTime.now().hour;
     // Same 6h-18h day/night split as the time-based wallpaper.
     final isDay = hour >= 6 && hour < 18;
@@ -206,11 +240,12 @@ class WallpaperService extends ChangeNotifier {
           : pickSlideshowFilter(_settingsService.unsplashNightSources, defaultNightSlideshowSources, _random),
       _settingsService.unsplashAccessKey,
     );
-    if (result == null || !_settingsService.unsplashSlideshowEnabled) return;
+    if (result == null || !_settingsService.unsplashSlideshowEnabled) return false;
     final (file, author) = result;
     _slideshowFile = file;
     await _settingsService.setUnsplashAuthor(author);
     _updateWallpaper(force: true);
+    return true;
   }
 
   void _updateRedditState() {
