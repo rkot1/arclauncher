@@ -20,6 +20,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flauncher/gradients.dart';
+import 'package:flauncher/models/wallpaper_palette.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -121,6 +122,22 @@ void main() {
 
     verify(settingsService.setGradientUuid(FLauncherGradients.greatWhale.uuid));
     expect(wallpaperService.wallpaper, null);
+  });
+
+  test("palette follows a gradient wallpaper", () async {
+    final settingsService = _createSettingsService();
+    when(settingsService.gradientUuid).thenReturn(FLauncherGradients.grassShampoo.uuid);
+    final wallpaperService = WallpaperService(settingsService);
+
+    await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
+    for (var i = 0; i < 100 && wallpaperService.palette == null; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+
+    expect(
+      wallpaperService.palette,
+      await WallpaperPalette.fromColors(FLauncherGradients.grassShampoo.gradient.colors),
+    );
   });
 
   group("getGradient", () {

@@ -123,6 +123,7 @@ class AppIconsPage extends StatelessWidget {
                       value: style.background,
                       labelOf: (value) => switch (value) {
                         AppCardBackground.iconColor => localizations.iconColor,
+                        AppCardBackground.wallpaper => localizations.backgroundWallpaperColors,
                         AppCardBackground.color => localizations.backgroundSolidColor,
                         AppCardBackground.gradient => localizations.backgroundGradient,
                         AppCardBackground.glass => localizations.backgroundTranslucent,

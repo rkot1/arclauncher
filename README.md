@@ -37,7 +37,7 @@ Once you're in the group, you can enrol in the beta either way:
 - **Auto-Hide Status Bar** - Hides the status bar when scrolling into the app grid to maximize screen space.
 - **System Navigation Bar** - On devices with an on-screen back/home/recents bar, hide it over the launcher (swipe up to show) or reveal it only while the mouse pointer rests on the bottom edge.
 - **Accent Colors** - Personalize the UI with multiple color presets.
-- **App Icons** - Show banners, or each app's icon pulled from its package (full icon, adaptive foreground layer or themed monochrome) on a generic background: icon-tinted, solid color, gradient, translucent or your own image. Card shadows include an accent glow on focus.
+- **App Icons** - Show banners, or each app's icon pulled from its package (full icon, adaptive foreground layer or themed monochrome) on a generic background: icon-tinted, wallpaper colors (picked from the wallpaper on screen and following each slideshow change), solid color, gradient, translucent or your own image. Card shadows include an accent glow on focus.
 - **App Captions** - Choose when and where app names appear (below or on the card, always or on focus), with system or custom fonts, size, weight, case, alignment, color, pill/bar backgrounds, text shadows and box shadows. Custom `.ttf`/`.otf` fonts can be imported with a file manager or copied to `Android/data/com.omeda.arc/files/fonts/` (for example with `adb push`).
 - **Multilingual** - Available in English, Spanish, Turkish, and Vietnamese.
 

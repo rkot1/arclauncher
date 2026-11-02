@@ -2096,6 +2096,13 @@ class MockSettingsService extends _i1.Mock implements _i19.SettingsService {
       ) as bool);
 
   @override
+  int get dockBottomGap => (super.noSuchMethod(
+        Invocation.getter(#dockBottomGap),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
   bool get showFocusBorders => (super.noSuchMethod(
         Invocation.getter(#showFocusBorders),
         returnValue: false,
@@ -2588,6 +2595,16 @@ class MockSettingsService extends _i1.Mock implements _i19.SettingsService {
   _i10.Future<void> setDockDarkBackground(bool? value) => (super.noSuchMethod(
         Invocation.method(
           #setDockDarkBackground,
+          [value],
+        ),
+        returnValue: _i10.Future<void>.value(),
+        returnValueForMissingStub: _i10.Future<void>.value(),
+      ) as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> setDockBottomGap(int? value) => (super.noSuchMethod(
+        Invocation.method(
+          #setDockBottomGap,
           [value],
         ),
         returnValue: _i10.Future<void>.value(),

@@ -55,6 +55,10 @@ const String _watchNextExcludedPackages = "watch_next_excluded_packages";
 const List<int> WATCH_NEXT_MAX_ITEMS_OPTIONS = [0, 5, 10, 15, 20, 25, 30, 50];
 const String _dockDarkBackground = "dock_dark_background";
 const String _dockShadowEnabled = "dock_shadow_enabled";
+const String _dockBottomGap = "dock_bottom_gap";
+
+/// Choices for the space left below the Favorites dock on the home screen, in logical pixels.
+const List<int> kDockBottomGaps = [0, 16, 32, 48, 64, 96, 128, 192];
 const String _showFocusBorders = "show_focus_borders";
 const String _focusBorderThickness = "focus_border_thickness";
 
@@ -161,6 +165,7 @@ final List<SettingSpec> settingSpecs = [
   const SettingSpec(_watchNextExcludedPackages, SettingType.stringList),
   const SettingSpec(_dockDarkBackground, SettingType.boolean),
   const SettingSpec(_dockShadowEnabled, SettingType.boolean),
+  const SettingSpec(_dockBottomGap, SettingType.integer, min: 0, max: 600),
   const SettingSpec(_showFocusBorders, SettingType.boolean),
   const SettingSpec(_focusBorderThickness, SettingType.decimal, min: 0.5, max: 8),
   SettingSpec.choice(_appCaptionVisibility, AppCaptionVisibility.values),
@@ -302,6 +307,9 @@ class SettingsService extends ChangeNotifier {
   bool get dockDarkBackground => _sharedPreferences.getBool(_dockDarkBackground) ?? false;
 
   bool get dockShadowEnabled => _sharedPreferences.getBool(_dockShadowEnabled) ?? false;
+
+  /// Space left below the Favorites dock on the home screen.
+  int get dockBottomGap => _sharedPreferences.getInt(_dockBottomGap) ?? 32;
 
   bool get showFocusBorders => _sharedPreferences.getBool(_showFocusBorders) ?? true;
 
@@ -492,6 +500,11 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setDockDarkBackground(bool value) async {
     return set(_dockDarkBackground, value);
+  }
+
+  Future<void> setDockBottomGap(int value) async {
+    await _sharedPreferences.setInt(_dockBottomGap, value);
+    notifyListeners();
   }
 
   Future<void> setDockShadowEnabled(bool value) async {

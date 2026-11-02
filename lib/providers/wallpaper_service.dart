@@ -23,6 +23,7 @@ import 'dart:typed_data';
 
 import 'package:flauncher/flauncher_channel.dart';
 import 'package:flauncher/gradients.dart';
+import 'package:flauncher/models/wallpaper_palette.dart';
 import 'package:flauncher/providers/reddit_slideshow.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/providers/unsplash_slideshow.dart';
@@ -81,6 +82,13 @@ class WallpaperService extends ChangeNotifier {
 
   ImageProvider? get wallpaper => _wallpaper;
 
+  WallpaperPalette? _palette;
+  bool _disposed = false;
+
+  /// Colours of the wallpaper on screen, for app cards that blend with it; null until they are known,
+  /// and for video wallpapers.
+  WallpaperPalette? get palette => _palette;
+
   File? get wallpaperVideoFile {
     final f = _resolveActiveVideoFile();
     return f != null && f.existsSync() ? f : null;
@@ -138,6 +146,7 @@ class WallpaperService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _settingsService.removeListener(_onSettingsChanged);
     _timer?.cancel();
     _slideshowTimer?.cancel();
@@ -163,7 +172,12 @@ class WallpaperService extends ChangeNotifier {
     _lastTimeBasedEnabled = _settingsService.timeBasedWallpaperEnabled;
     _lastSlideshowConfig = _slideshowConfig;
     _lastRedditConfig = _redditConfig;
+    final revision = _wallpaperRevision;
     _updateWallpaper();
+    if (revision == _wallpaperRevision) {
+      // A gradient wallpaper is no change from the initial state, but it still has colours.
+      unawaited(_updatePalette(false));
+    }
     _updateTimerState();
     _updateSlideshowState();
     _updateRedditState();
@@ -295,6 +309,25 @@ class WallpaperService extends ChangeNotifier {
     if (_wallpaper != newWallpaper || videoFile != null || force) {
       _wallpaper = newWallpaper;
       _wallpaperRevision++;
+      notifyListeners();
+      unawaited(_updatePalette(videoFile != null));
+    }
+  }
+
+  Future<void> _updatePalette(bool video) async {
+    final revision = _wallpaperRevision;
+    final wallpaper = _wallpaper;
+    final WallpaperPalette? palette;
+    if (wallpaper != null) {
+      palette = await WallpaperPalette.fromImage(wallpaper);
+    } else if (!video) {
+      palette = await WallpaperPalette.fromColors(gradient.gradient.colors);
+    } else {
+      palette = null;
+    }
+    // Skip it when a newer wallpaper was set meanwhile.
+    if (!_disposed && revision == _wallpaperRevision && palette != _palette) {
+      _palette = palette;
       notifyListeners();
     }
   }

@@ -50,6 +50,14 @@ class AppearancePanelPage extends StatelessWidget {
                 title: Text(localizations.dockDarkBackground, style: Theme.of(context).textTheme.bodyMedium),
                 secondary: const Icon(Icons.dark_mode),
               ),
+              SettingsChoiceTile<int>(
+                icon: Icons.vertical_align_bottom,
+                title: localizations.dockBottomGap,
+                values: kDockBottomGaps,
+                value: settingsService.dockBottomGap,
+                labelOf: (gap) => gap == 0 ? localizations.dockBottomGapNone : "$gap dp",
+                onChanged: settingsService.setDockBottomGap,
+              ),
               FocusableSettingsTile(
                 showChevron: true,
                 leading: const Icon(Icons.border_style),

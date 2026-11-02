@@ -60,6 +60,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dockDarkBackground => 'Koyu dock arka planı';
 
   @override
+  String get dockBottomGap => 'Space below favorites';
+
+  @override
+  String get dockBottomGapNone => 'None';
+
+  @override
   String get dockShadow => 'Dock gölgesi';
 
   @override
@@ -824,6 +830,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backgroundGradient => 'Gradient';
+
+  @override
+  String get backgroundWallpaperColors => 'Wallpaper colors';
 
   @override
   String get backgroundTranslucent => 'Translucent';

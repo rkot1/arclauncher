@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flauncher/models/app_card_style.dart';
+import 'package:flauncher/models/wallpaper_palette.dart';
+import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 /// An app icon centred on the generic card background chosen in [AppIconStyle].
 class AppIconFace extends StatelessWidget {
@@ -90,6 +93,19 @@ class AppCardBackgroundView extends StatelessWidget {
                 base.withSaturation(saturation).withLightness(0.34).toColor(),
                 base.withSaturation(saturation).withLightness(0.17).toColor(),
               ],
+            ),
+          ),
+        );
+      case AppCardBackground.wallpaper:
+        final palette = context.select<WallpaperService, WallpaperPalette?>((service) => service.palette);
+        return AnimatedContainer(
+          // In step with the wallpaper crossfade.
+          duration: const Duration(milliseconds: 1500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: (palette ?? WallpaperPalette.fallback).cardColors,
             ),
           ),
         );
