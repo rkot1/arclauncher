@@ -25,6 +25,8 @@ import 'watch_next_panel_page.dart';
 import 'wallpaper_panel_page.dart';
 import 'status_bar_panel_page.dart';
 import 'accent_color_page.dart';
+import 'app_captions_page.dart';
+import 'app_icons_page.dart';
 import 'appearance_panel_page.dart';
 import 'misc_panel_page.dart';
 
@@ -74,6 +76,18 @@ class InterfaceSettingsPage extends StatelessWidget {
                   leading: const Icon(Icons.palette_outlined),
                   title: Text(localizations.accentColor, style: Theme.of(context).textTheme.bodyMedium),
                   onPressed: () => Navigator.of(context).pushNamed(AccentColorPage.routeName),
+                ),
+                FocusableSettingsTile(
+                  showChevron: true,
+                  leading: const Icon(Icons.apps_outlined),
+                  title: Text(localizations.appIconsSettings, style: Theme.of(context).textTheme.bodyMedium),
+                  onPressed: () => Navigator.of(context).pushNamed(AppIconsPage.routeName),
+                ),
+                FocusableSettingsTile(
+                  showChevron: true,
+                  leading: const Icon(Icons.subtitles_outlined),
+                  title: Text(localizations.appCaptionsSettings, style: Theme.of(context).textTheme.bodyMedium),
+                  onPressed: () => Navigator.of(context).pushNamed(AppCaptionsPage.routeName),
                 ),
                 FocusableSettingsTile(
                   showChevron: true,

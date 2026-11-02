@@ -232,13 +232,13 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: FocusAwareAppBar(key: _appBarKey),
-              // (initialized (data.$1), layoutVersion (data.$2), showAppNamesBelowIcons (data.$3))
-              body: Selector2<AppsService, SettingsService, (bool, int, bool)>(
+              // (initialized (data.$1), layoutVersion (data.$2), caption height below cards (data.$3))
+              body: Selector2<AppsService, SettingsService, (bool, int, double)>(
                 selector: (_, appsService, settingsService) =>
-                    (appsService.initialized, appsService.layoutVersion, settingsService.showAppNamesBelowIcons),
+                    (appsService.initialized, appsService.layoutVersion, settingsService.appCaptionStyle.reservedHeight),
                 builder: (context, data, _) {
                   if (data.$1) {
-                    return _tvOSLayout(context, context.read<AppsService>(), showAppNames: data.$3);
+                    return _tvOSLayout(context, context.read<AppsService>(), captionHeight: data.$3);
                   } else {
                     return _emptyState(context);
                   }
@@ -264,7 +264,7 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
     _setAppGridFocused(false);
   }
 
-  Widget _tvOSLayout(BuildContext context, AppsService appsService, {required bool showAppNames}) {
+  Widget _tvOSLayout(BuildContext context, AppsService appsService, {required double captionHeight}) {
     final favoritesCategory = appsService.categories.firstWhereOrNull((c) => c.name == 'Favorites');
     final favoriteApps = favoritesCategory?.applications ?? const [];
 
@@ -326,7 +326,7 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
         ..._buildSectionSlivers(
           otherSections,
           firstCategoryAlreadyFound: favoriteApps.isNotEmpty,
-          showAppNames: showAppNames,
+          captionHeight: captionHeight,
           onFirstSectionFocused: favoriteApps.isNotEmpty ? _scrollDockToTop : null,
         ),
         SliverToBoxAdapter(child: SizedBox(height: _bottomScrollPadding(context, hasDock: favoriteApps.isNotEmpty))),
@@ -344,7 +344,7 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
   List<Widget> _buildSectionSlivers(
     List<LauncherSection> sections, {
     bool firstCategoryAlreadyFound = false,
-    required bool showAppNames,
+    required double captionHeight,
     VoidCallback? onFirstSectionFocused,
   }) {
     final List<Widget> slivers = [];
@@ -416,8 +416,8 @@ class _FLauncherState extends State<FLauncher> with WidgetsBindingObserver {
           break;
         case CategoryType.grid:
           final gridContentWidth = MediaQuery.sizeOf(context).width - 2 * kLauncherSectionHorizontalPadding;
-          final gridAspectRatio = showAppNames
-              ? appCardGridAspectRatio(gridContentWidth, category.columnsCount)
+          final gridAspectRatio = captionHeight > 0
+              ? appCardGridAspectRatio(gridContentWidth, category.columnsCount, captionHeight)
               : kAppCardAspectRatio;
           slivers.add(
             SliverPadding(

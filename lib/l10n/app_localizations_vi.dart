@@ -771,4 +771,215 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get brightnessSlotNight => '22:00–6:00';
+
+  @override
+  String get appIconsSettings => 'Biểu tượng ứng dụng';
+
+  @override
+  String get appCaptionsSettings => 'Tên ứng dụng';
+
+  @override
+  String get appCardImageMode => 'Nội dung ô ứng dụng';
+
+  @override
+  String get cardModeBanner => 'Ảnh đại diện';
+
+  @override
+  String get cardModeBannerOrIcon =>
+      'Ảnh đại diện, nếu không có thì biểu tượng';
+
+  @override
+  String get cardModeIcon => 'Chỉ biểu tượng';
+
+  @override
+  String get appIconVariant => 'Biểu tượng';
+
+  @override
+  String get iconVariantFull => 'Biểu tượng đầy đủ';
+
+  @override
+  String get iconVariantForeground => 'Lớp tiền cảnh';
+
+  @override
+  String get iconVariantMonochrome => 'Đơn sắc';
+
+  @override
+  String get appIconSize => 'Kích thước biểu tượng';
+
+  @override
+  String get sizeSmall => 'Nhỏ';
+
+  @override
+  String get sizeMedium => 'Vừa';
+
+  @override
+  String get sizeLarge => 'Lớn';
+
+  @override
+  String get appIconTint => 'Màu biểu tượng';
+
+  @override
+  String get iconColor => 'Màu của biểu tượng';
+
+  @override
+  String get appCardBackground => 'Nền';
+
+  @override
+  String get backgroundSolidColor => 'Màu đơn';
+
+  @override
+  String get backgroundGradient => 'Màu chuyển sắc';
+
+  @override
+  String get backgroundTranslucent => 'Trong mờ';
+
+  @override
+  String get backgroundImage => 'Hình ảnh';
+
+  @override
+  String get backgroundChooseImage => 'Chọn ảnh nền';
+
+  @override
+  String get backgroundNoImage => 'Chưa chọn ảnh';
+
+  @override
+  String get appCardShadow => 'Đổ bóng ô ứng dụng';
+
+  @override
+  String get appIconsHint =>
+      'Biểu tượng được lấy từ gói của từng ứng dụng. Lớp tiền cảnh và Đơn sắc cần biểu tượng thích ứng hoặc biểu tượng theo chủ đề; các ứng dụng khác giữ biểu tượng đầy đủ. Ảnh đại diện tùy chỉnh luôn được ưu tiên.';
+
+  @override
+  String get captionVisibility => 'Hiện tên';
+
+  @override
+  String get captionVisibilityHidden => 'Không bao giờ';
+
+  @override
+  String get captionVisibilityAlways => 'Luôn luôn';
+
+  @override
+  String get captionVisibilityFocused => 'Khi được chọn';
+
+  @override
+  String get captionPosition => 'Vị trí';
+
+  @override
+  String get captionPositionBelow => 'Dưới ô';
+
+  @override
+  String get captionPositionOverlay => 'Trên ô';
+
+  @override
+  String get captionFont => 'Phông chữ';
+
+  @override
+  String get captionFontDefault => 'Mặc định';
+
+  @override
+  String get captionImportFont => 'Nhập tệp phông chữ';
+
+  @override
+  String captionImportFontHint(String path) {
+    return 'Hoặc sao chép tệp .ttf / .otf vào $path';
+  }
+
+  @override
+  String get captionFontSize => 'Cỡ chữ';
+
+  @override
+  String get captionFontWeight => 'Độ đậm';
+
+  @override
+  String get fontWeightLight => 'Mảnh';
+
+  @override
+  String get fontWeightRegular => 'Thường';
+
+  @override
+  String get fontWeightMedium => 'Vừa';
+
+  @override
+  String get fontWeightSemiBold => 'Hơi đậm';
+
+  @override
+  String get fontWeightBold => 'Đậm';
+
+  @override
+  String get fontWeightBlack => 'Rất đậm';
+
+  @override
+  String get captionLetterCase => 'Kiểu chữ';
+
+  @override
+  String get captionCaseNormal => 'Bình thường';
+
+  @override
+  String get captionCaseUppercase => 'IN HOA';
+
+  @override
+  String get captionAlignment => 'Căn lề';
+
+  @override
+  String get captionAlignStart => 'Đầu dòng';
+
+  @override
+  String get captionAlignCenter => 'Giữa';
+
+  @override
+  String get captionColor => 'Màu';
+
+  @override
+  String get captionColorTheme => 'Theo giao diện';
+
+  @override
+  String get captionColorMuted => 'Nhạt';
+
+  @override
+  String get captionColorAccent => 'Màu nhấn';
+
+  @override
+  String get captionBackground => 'Nền';
+
+  @override
+  String get captionBackgroundPill => 'Viên thuốc';
+
+  @override
+  String get captionBackgroundBar => 'Thanh';
+
+  @override
+  String get captionTextShadow => 'Bóng chữ';
+
+  @override
+  String get captionBoxShadow => 'Bóng khung';
+
+  @override
+  String get styleNone => 'Không';
+
+  @override
+  String get shadowDefault => 'Mặc định';
+
+  @override
+  String get shadowSoft => 'Nhẹ';
+
+  @override
+  String get shadowStrong => 'Đậm';
+
+  @override
+  String get shadowOutline => 'Viền chữ';
+
+  @override
+  String get shadowGlow => 'Phát sáng màu nhấn';
+
+  @override
+  String get systemNavigationBar => 'Thanh điều hướng hệ thống';
+
+  @override
+  String get navigationBarVisible => 'Luôn hiện';
+
+  @override
+  String get navigationBarHidden => 'Ẩn, vuốt lên để hiện';
+
+  @override
+  String get navigationBarBottomEdge => 'Hiện ở mép dưới';
 }

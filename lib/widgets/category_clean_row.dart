@@ -46,7 +46,7 @@ class CategoryCleanRow extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    final showAppNames = context.select<SettingsService, bool>((s) => s.showAppNamesBelowIcons);
+    final captionHeight = context.select<SettingsService, double>((s) => s.appCaptionStyle.reservedHeight);
     Widget categoryContent;
     if (applications.isEmpty) {
       categoryContent = categoryContainerEmptyState(context);
@@ -54,8 +54,7 @@ class CategoryCleanRow extends StatelessWidget
     else {
       categoryContent = LayoutBuilder(
         builder: (context, constraints) {
-          final rowHeight = appCardRowExtentFromContentWidth(constraints.maxWidth)
-              + (showAppNames ? kAppNameLabelHeight : 0);
+          final rowHeight = appCardRowExtentFromContentWidth(constraints.maxWidth) + captionHeight;
           return SizedBox(
             height: rowHeight,
             child: Row(

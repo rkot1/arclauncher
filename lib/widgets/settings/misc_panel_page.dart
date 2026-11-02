@@ -2,6 +2,7 @@
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/widgets/rounded_switch_list_tile.dart';
 import 'package:flauncher/widgets/settings/focusable_settings_tile.dart';
+import 'package:flauncher/widgets/settings/app_captions_page.dart';
 import 'package:flauncher/widgets/settings/watch_next_panel_page.dart';
 import 'package:flauncher/widgets/settings/settings_theme.dart';
 import 'package:flutter/material.dart';
@@ -44,11 +45,11 @@ class MiscPanelPage extends StatelessWidget {
                 title: Text(localizations.showCategoryTitles, style: Theme.of(context).textTheme.bodyMedium),
                 secondary: Icon(Icons.abc),
               ),
-              RoundedSwitchListTile(
-                value: settingsService.showAppNamesBelowIcons,
-                onChanged: (value) => settingsService.setShowAppNamesBelowIcons(value),
-                title: Text(localizations.showAppNamesBelowIcons, style: Theme.of(context).textTheme.bodyMedium),
-                secondary: Icon(Icons.subtitles),
+              FocusableSettingsTile(
+                showChevron: true,
+                leading: const Icon(Icons.subtitles),
+                title: Text(localizations.appCaptionsSettings, style: Theme.of(context).textTheme.bodyMedium),
+                onPressed: () => Navigator.of(context).pushNamed(AppCaptionsPage.routeName),
               ),
               RoundedSwitchListTile(
                 value: settingsService.showFocusBorders,

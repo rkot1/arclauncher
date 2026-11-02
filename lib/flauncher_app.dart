@@ -20,6 +20,7 @@ import 'package:flauncher/actions.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
+import 'package:flauncher/widgets/system_navigation_bar_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -83,6 +84,7 @@ class FLauncherApp extends StatelessWidget
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       title: 'FLauncher',
+      builder: (context, child) => SystemNavigationBarController(child: child!),
         theme: ThemeData(
           useMaterial3: true,
           brightness: Brightness.dark,

@@ -767,4 +767,214 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get brightnessSlotNight => '10 PM - 6 AM';
+
+  @override
+  String get appIconsSettings => 'App Icons';
+
+  @override
+  String get appCaptionsSettings => 'App Captions';
+
+  @override
+  String get appCardImageMode => 'Card content';
+
+  @override
+  String get cardModeBanner => 'Banners';
+
+  @override
+  String get cardModeBannerOrIcon => 'Banners, else icon';
+
+  @override
+  String get cardModeIcon => 'Icons only';
+
+  @override
+  String get appIconVariant => 'Icon';
+
+  @override
+  String get iconVariantFull => 'Full icon';
+
+  @override
+  String get iconVariantForeground => 'Foreground layer';
+
+  @override
+  String get iconVariantMonochrome => 'Monochrome';
+
+  @override
+  String get appIconSize => 'Icon size';
+
+  @override
+  String get sizeSmall => 'Small';
+
+  @override
+  String get sizeMedium => 'Medium';
+
+  @override
+  String get sizeLarge => 'Large';
+
+  @override
+  String get appIconTint => 'Icon tint';
+
+  @override
+  String get iconColor => 'Icon color';
+
+  @override
+  String get appCardBackground => 'Background';
+
+  @override
+  String get backgroundSolidColor => 'Solid color';
+
+  @override
+  String get backgroundGradient => 'Gradient';
+
+  @override
+  String get backgroundTranslucent => 'Translucent';
+
+  @override
+  String get backgroundImage => 'Image';
+
+  @override
+  String get backgroundChooseImage => 'Choose background image';
+
+  @override
+  String get backgroundNoImage => 'No image selected';
+
+  @override
+  String get appCardShadow => 'Card shadow';
+
+  @override
+  String get appIconsHint =>
+      'Icons are pulled from each app package. Foreground layer and Monochrome need adaptive or themed icons; other apps keep their full icon. Custom banners always win.';
+
+  @override
+  String get captionVisibility => 'Show captions';
+
+  @override
+  String get captionVisibilityHidden => 'Never';
+
+  @override
+  String get captionVisibilityAlways => 'Always';
+
+  @override
+  String get captionVisibilityFocused => 'When focused';
+
+  @override
+  String get captionPosition => 'Position';
+
+  @override
+  String get captionPositionBelow => 'Below card';
+
+  @override
+  String get captionPositionOverlay => 'On card';
+
+  @override
+  String get captionFont => 'Font';
+
+  @override
+  String get captionFontDefault => 'Default';
+
+  @override
+  String get captionImportFont => 'Import font file';
+
+  @override
+  String captionImportFontHint(String path) {
+    return 'Or copy .ttf / .otf files to $path';
+  }
+
+  @override
+  String get captionFontSize => 'Size';
+
+  @override
+  String get captionFontWeight => 'Weight';
+
+  @override
+  String get fontWeightLight => 'Light';
+
+  @override
+  String get fontWeightRegular => 'Regular';
+
+  @override
+  String get fontWeightMedium => 'Medium';
+
+  @override
+  String get fontWeightSemiBold => 'Semi-bold';
+
+  @override
+  String get fontWeightBold => 'Bold';
+
+  @override
+  String get fontWeightBlack => 'Black';
+
+  @override
+  String get captionLetterCase => 'Letter case';
+
+  @override
+  String get captionCaseNormal => 'Normal';
+
+  @override
+  String get captionCaseUppercase => 'UPPERCASE';
+
+  @override
+  String get captionAlignment => 'Alignment';
+
+  @override
+  String get captionAlignStart => 'Start';
+
+  @override
+  String get captionAlignCenter => 'Center';
+
+  @override
+  String get captionColor => 'Color';
+
+  @override
+  String get captionColorTheme => 'Theme';
+
+  @override
+  String get captionColorMuted => 'Muted';
+
+  @override
+  String get captionColorAccent => 'Accent';
+
+  @override
+  String get captionBackground => 'Background';
+
+  @override
+  String get captionBackgroundPill => 'Pill';
+
+  @override
+  String get captionBackgroundBar => 'Bar';
+
+  @override
+  String get captionTextShadow => 'Text shadow';
+
+  @override
+  String get captionBoxShadow => 'Box shadow';
+
+  @override
+  String get styleNone => 'None';
+
+  @override
+  String get shadowDefault => 'Default';
+
+  @override
+  String get shadowSoft => 'Soft';
+
+  @override
+  String get shadowStrong => 'Strong';
+
+  @override
+  String get shadowOutline => 'Outline';
+
+  @override
+  String get shadowGlow => 'Accent glow';
+
+  @override
+  String get systemNavigationBar => 'System navigation bar';
+
+  @override
+  String get navigationBarVisible => 'Always visible';
+
+  @override
+  String get navigationBarHidden => 'Hidden, swipe up';
+
+  @override
+  String get navigationBarBottomEdge => 'Show at bottom edge';
 }
